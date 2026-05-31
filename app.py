@@ -388,9 +388,9 @@ with col_card:
         for i, item in enumerate(reversed(fired_interventions)):
             intervention_data = item["intervention"]
 
-            # Open colored left border container
+            # Colored indicator square for persona
             st.markdown(
-                f'<div style="border-left: 4px solid {intervention_data["colour"]}; padding-left: 12px; margin-bottom: 0.5rem;">',
+                f'<div style="display: inline-block; width: 12px; height: 12px; background-color: {intervention_data["colour"]}; border-radius: 2px; margin-bottom: 8px;"></div>',
                 unsafe_allow_html=True
             )
 
@@ -410,9 +410,6 @@ with col_card:
 
                 if persona_key:
                     get_persona_image_or_placeholder(persona_key, intervention_data["colour"])
-
-            # Close colored border container
-            st.markdown('</div>', unsafe_allow_html=True)
 
     # Show turn progress
     st.markdown("---")
