@@ -385,17 +385,21 @@ with col_card:
         st.markdown("---")
         st.markdown("**Intervention History**")
 
+        # Mapping of persona names to colored circle emojis
+        persona_emoji = {
+            "The Anarchist": "🟣",
+            "The Cartographer": "🟢",
+            "The Fool": "🟠",
+            "The Devil's Advocate": "🔴",
+            "The Industry SME": "🔵",
+        }
+
         for i, item in enumerate(reversed(fired_interventions)):
             intervention_data = item["intervention"]
 
-            # Colored indicator square for persona
-            st.markdown(
-                f'<div style="display: inline-block; width: 12px; height: 12px; background-color: {intervention_data["colour"]}; border-radius: 2px; margin-bottom: 8px;"></div>',
-                unsafe_allow_html=True
-            )
-
-            # Create expander with persona name and turn number
-            expander_label = f'{intervention_data["persona"]} — Turn {item["turn_number"]}'
+            # Create expander label with colored emoji indicator and persona name
+            emoji = persona_emoji.get(intervention_data["persona"], "•")
+            expander_label = f'{emoji} {intervention_data["persona"]} — Turn {item["turn_number"]}'
 
             with st.expander(expander_label, expanded=False):
                 # Full intervention text
