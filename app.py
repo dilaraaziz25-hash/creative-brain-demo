@@ -392,6 +392,12 @@ with col_card:
         for i, item in enumerate(reversed(fired_interventions)):
             intervention_data = item["intervention"]
 
+            # Open colored left border container
+            st.markdown(
+                f'<div style="border-left: 4px solid {intervention_data["colour"]}; padding-left: 12px; margin-bottom: 0.5rem;">',
+                unsafe_allow_html=True
+            )
+
             # Create expander with persona name and turn number
             expander_label = f'{intervention_data["persona"]} — Turn {item["turn_number"]}'
 
@@ -408,6 +414,9 @@ with col_card:
 
                 if persona_key:
                     get_persona_image_or_placeholder(persona_key, intervention_data["colour"])
+
+            # Close colored border container
+            st.markdown('</div>', unsafe_allow_html=True)
 
     # Show turn progress
     st.markdown("---")
