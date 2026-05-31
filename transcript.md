@@ -1,4 +1,5 @@
 # Digital Transformation Strategy — Q3 Planning Session
+
 Participants: Sarah (Project Lead), Marcus (IT Director), Priya (Finance), Tom (Operations), Lisa (HR)
 
 Sarah: Right, thanks everyone for joining. Today we need to lock down our digital transformation roadmap for Q3. We've been talking about this for six months, so let's make some actual decisions. I think we just go with what we discussed last time — migrate everything to the cloud, roll out the new ERP system, and retire the legacy infrastructure.
