@@ -113,6 +113,15 @@ st.markdown(
         max-height: none !important;
         overflow: visible !important;
     }
+    /* Nuclear option: remove ALL height restrictions from expander and inner content */
+    [data-testid="stExpander"] [data-testid="stMarkdownContainer"],
+    [data-testid="stExpander"] [data-testid="stMarkdownContainer"] p,
+    [data-testid="stExpander"] [data-testid="stMarkdownContainer"] div {
+        max-height: none !important;
+        overflow: visible !important;
+        height: auto !important;
+        display: block !important;
+    }
     img {
         max-height: 300px;
         width: 100%;
