@@ -130,13 +130,13 @@ def load_events(_transcript_hash: str):
 
 def play_intervention_chime():
     """Play a notification chime when persona intervention fires using Web Audio API."""
-    # Use timestamp to force unique component renders and fresh AudioContext each time
-    unique_id = int(time.time() * 1000000) % 1000000
+    # Generate unique timestamp to embed in HTML and force fresh render
+    unique_timestamp = int(time.time() * 1000000)
 
     chime_html = f"""
-    <script id="chime-{unique_id}">
+    <script>
     (function() {{
-        // Create a fresh AudioContext each time the chime plays
+        // Unique ID comment ({unique_timestamp}) ensures each chime renders fresh
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
         // First tone: 1000 Hz for 150ms
@@ -165,7 +165,7 @@ def play_intervention_chime():
     }})();
     </script>
     """
-    st.components.v1.html(chime_html, height=0, key=f"chime_{unique_id}")
+    st.components.v1.html(chime_html, height=0)
 
 
 def get_persona_image_or_placeholder(persona_key: str, colour: str):
