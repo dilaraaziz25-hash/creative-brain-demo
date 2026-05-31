@@ -375,9 +375,9 @@ with col_card:
             unsafe_allow_html=True,
         )
 
-    # Intervention history section
+    # Intervention history section — show only interventions from previous turns
     fired_interventions = []
-    for idx in range(min(st.session_state.display_turn, len(events))):
+    for idx in range(min(st.session_state.display_turn - 1, len(events))):
         event = events[idx]
         if event["intervention"]:
             fired_interventions.append({
