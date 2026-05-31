@@ -391,12 +391,11 @@ with col_card:
 
         for i, item in enumerate(reversed(fired_interventions)):
             intervention_data = item["intervention"]
-            is_most_recent = (i == 0)
 
             # Create expander with persona name and turn number
             expander_label = f'{intervention_data["persona"]} — Turn {item["turn_number"]}'
 
-            with st.expander(expander_label, expanded=is_most_recent):
+            with st.expander(expander_label, expanded=False):
                 # Full intervention text
                 st.markdown(intervention_data["intervention"])
 
