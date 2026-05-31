@@ -82,11 +82,23 @@ st.markdown(
     [data-testid="stMarkdownContainer"] {
         max-height: none !important;
         overflow: visible !important;
+        height: auto !important;
+    }
+    [data-testid="stMarkdownContainer"] * {
+        max-height: none !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] div {
+        max-height: none !important;
+        overflow: visible !important;
     }
     img {
         max-height: 300px;
         width: 100%;
         object-fit: cover;
+        margin-top: 1rem;
     }
     .placeholder-box {
         width: 100%;
