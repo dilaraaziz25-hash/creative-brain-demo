@@ -237,7 +237,7 @@ with col_transcript:
     st.subheader("Meeting Transcript")
 
     # Playback controls
-    col_play, col_stop, col_next, col_reset = st.columns([0.15, 0.15, 0.15, 0.15])
+    col_play, col_next, col_reset = st.columns([0.15, 0.15, 0.15])
 
     # Determine play button label dynamically
     has_intervention = (st.session_state.current_turn >= 0 and
@@ -273,10 +273,6 @@ with col_transcript:
                     st.session_state.playing = True
                     st.rerun()
 
-    with col_stop:
-        if st.button("⏹ Stop", key="stop_btn"):
-            st.session_state.playing = False
-            st.rerun()
     with col_next:
         if st.button("Next turn →", key="next_btn"):
             if st.session_state.display_turn < len(events):
