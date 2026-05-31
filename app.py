@@ -94,6 +94,25 @@ st.markdown(
         max-height: none !important;
         overflow: visible !important;
     }
+    /* Remove height restrictions on expander content */
+    [data-testid="stExpander"] {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    [data-testid="stExpander"] * {
+        max-height: none !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+    /* Ensure all block-level elements inside expanders have no height limits */
+    div[role="region"] {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    div[role="region"] * {
+        max-height: none !important;
+        overflow: visible !important;
+    }
     img {
         max-height: 300px;
         width: 100%;
