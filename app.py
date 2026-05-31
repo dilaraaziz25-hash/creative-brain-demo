@@ -10,8 +10,10 @@ st.set_page_config(layout="wide", page_title="The Creative Brain")
 # Initialize session state FIRST — before any other code
 if "playing" not in st.session_state:
     st.session_state.playing = False
+if "display_turn" not in st.session_state:
+    st.session_state.display_turn = 0
 if "current_turn" not in st.session_state:
-    st.session_state.current_turn = 0
+    st.session_state.current_turn = -1
 if "listening_state" not in st.session_state:
     st.session_state.listening_state = False
 if "last_chime_turn" not in st.session_state:
@@ -35,16 +37,23 @@ st.markdown(
         color: #1f1f1f;
         margin-bottom: 0.25rem;
     }
+    .speaker-title {
+        font-style: italic;
+        color: #888;
+        font-size: 0.9em;
+        font-weight: normal;
+    }
     .turn-text {
         color: #484848;
         line-height: 1.5;
     }
     .persona-card {
         border-radius: 0.75rem;
-        padding: 1.5rem;
+        padding: 12px 16px;
         background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
         border: 1px solid #e0e0e0;
         box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 12px;
     }
     .persona-header {
         font-size: 1.3rem;
@@ -59,7 +68,7 @@ st.markdown(
         text-transform: uppercase;
         letter-spacing: 0.05rem;
         color: #888;
-        margin-bottom: 1rem;
+        margin-bottom: 16px;
         opacity: 0.7;
     }
     .persona-text {
@@ -67,6 +76,17 @@ st.markdown(
         line-height: 1.6;
         color: #333;
         margin-bottom: 1rem;
+        max-height: none;
+        overflow: visible;
+    }
+    [data-testid="stMarkdownContainer"] {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    img {
+        max-height: 300px;
+        width: 100%;
+        object-fit: cover;
     }
     .placeholder-box {
         width: 100%;
@@ -179,25 +199,36 @@ events = st.session_state.events
 # If current turn has intervention: stop and show card
 # If current turn has no intervention: wait 1.5s and advance to next turn
 if st.session_state.get("playing"):
-    current_event = events[st.session_state.current_turn]
+    if st.session_state.current_turn >= 0 and st.session_state.current_turn < len(events):
+        current_event = events[st.session_state.current_turn]
 
-    if current_event["intervention"]:
-        # Current turn has an intervention — stop and show the card
-        st.session_state.playing = False
-        st.rerun()
-    else:
-        # Current turn has no intervention — wait and advance
-        time.sleep(1.5)
-        if st.session_state.current_turn < len(events) - 1:
-            st.session_state.current_turn += 1
-        else:
+        if current_event["intervention"]:
+            # Current turn has an intervention — stop and show the card
             st.session_state.playing = False
-        st.rerun()
+            st.rerun()
+        else:
+            # Current turn has no intervention — wait and advance
+            time.sleep(1.5)
+            if st.session_state.display_turn < len(events):
+                st.session_state.display_turn += 1
+                st.session_state.current_turn = st.session_state.display_turn - 1
+            else:
+                st.session_state.playing = False
+            st.rerun()
 
 st.title("🧠 The Creative Brain")
 st.markdown(
     "An AI meeting facilitator that detects groupthink and injects persona interventions in real time."
 )
+
+# Speaker job titles mapping
+SPEAKER_TITLES = {
+    "Sarah": "Project Lead",
+    "Marcus": "IT Director",
+    "Priya": "Finance",
+    "Tom": "Operations",
+    "Lisa": "HR",
+}
 
 # Layout: two columns
 col_transcript, col_card = st.columns([0.65, 0.35])
@@ -209,12 +240,13 @@ with col_transcript:
     col_play, col_stop, col_next, col_reset = st.columns([0.15, 0.15, 0.15, 0.15])
 
     # Determine play button label dynamically
-    current_event = events[st.session_state.current_turn]
-    has_intervention = current_event["intervention"] is not None
+    has_intervention = (st.session_state.current_turn >= 0 and
+                       st.session_state.current_turn < len(events) and
+                       events[st.session_state.current_turn]["intervention"] is not None)
 
     if st.session_state.playing:
         play_label = "⏸ Pause"
-    elif has_intervention and st.session_state.current_turn > 0:
+    elif has_intervention and st.session_state.display_turn > 0:
         # "Continue" only shows if paused on intervention (not on first load)
         play_label = "▶ Continue"
     else:
@@ -226,44 +258,57 @@ with col_transcript:
                 # Pause while playing
                 st.session_state.playing = False
             else:
-                # Resume playing
-                if st.session_state.current_turn < len(events) - 1:
-                    # If paused on an intervention, skip past it; otherwise just resume
-                    if has_intervention:
-                        st.session_state.current_turn += 1
+                # Start or resume playing
+                if st.session_state.display_turn == 0:
+                    # Starting from beginning: show turn 0 and process it
+                    st.session_state.display_turn = 1
+                    st.session_state.current_turn = 0
+                elif has_intervention and st.session_state.display_turn < len(events):
+                    # Paused on intervention: skip past it to continue
+                    st.session_state.display_turn += 1
+                    st.session_state.current_turn = st.session_state.display_turn - 1
+                # If not at beginning and no intervention, just resume as-is
+
+                if st.session_state.display_turn <= len(events):
                     st.session_state.playing = True
                     st.rerun()
 
     with col_stop:
         if st.button("⏹ Stop", key="stop_btn"):
             st.session_state.playing = False
+            st.rerun()
     with col_next:
         if st.button("Next turn →", key="next_btn"):
-            if st.session_state.current_turn < len(events) - 1:
-                st.session_state.current_turn += 1
+            if st.session_state.display_turn < len(events):
+                st.session_state.display_turn += 1
+                st.session_state.current_turn = min(st.session_state.display_turn - 1, len(events) - 1)
     with col_reset:
         if st.button("↺ Reset", key="reset_btn"):
-            st.session_state.current_turn = 0
+            st.session_state.display_turn = 0
+            st.session_state.current_turn = -1
             st.session_state.playing = False
 
     st.markdown("---")
 
-    # Transcript display — only show if playing or we've started (current_turn > 0)
-    if st.session_state.playing or st.session_state.current_turn > 0:
+    # Transcript display — only show if playing or we've started (display_turn > 0)
+    if st.session_state.playing or st.session_state.display_turn > 0:
         transcript_container = st.container()
         with transcript_container:
-            for idx in range(min(st.session_state.current_turn + 1, len(events))):
+            for idx in range(min(st.session_state.display_turn, len(events))):
                 event = events[idx]
                 intervention = event["intervention"]
+                speaker = event['speaker']
+                job_title = SPEAKER_TITLES.get(speaker, "")
 
                 # Build turn HTML
                 border_color = (
                     intervention["colour"] if intervention else "transparent"
                 )
+                title_html = f', <span class="speaker-title">{job_title}</span>' if job_title else ""
                 turn_html = f"""
                 <div class="transcript-turn {'with-intervention' if intervention else ''}"
                      style="--intervention-color: {border_color};">
-                    <div class="speaker-name">{event['speaker']}</div>
+                    <div class="speaker-name">{speaker}{title_html}</div>
                     <div class="turn-text">{event['text']}</div>
                 </div>
                 """
@@ -286,11 +331,14 @@ with col_card:
     st.subheader("Persona Intervention")
 
     # Show current turn's intervention or listening placeholder
-    current_event = events[st.session_state.current_turn]
-    intervention = current_event["intervention"]
+    current_event = None
+    intervention = None
+    if st.session_state.current_turn >= 0 and st.session_state.current_turn < len(events):
+        current_event = events[st.session_state.current_turn]
+        intervention = current_event["intervention"]
 
-    # Only show intervention if we've started playback (current_turn > 0) or are actively playing
-    should_show_intervention = intervention and (st.session_state.current_turn > 0 or st.session_state.playing)
+    # Only show intervention if we've started playback (display_turn > 0) or are actively playing
+    should_show_intervention = intervention and (st.session_state.display_turn > 0 or st.session_state.playing)
 
     if should_show_intervention:
         # Play chime once when intervention first appears
@@ -327,16 +375,44 @@ with col_card:
             unsafe_allow_html=True,
         )
 
+    # Intervention history section
+    fired_interventions = []
+    for idx in range(min(st.session_state.display_turn, len(events))):
+        event = events[idx]
+        if event["intervention"]:
+            fired_interventions.append({
+                "turn_number": idx + 1,
+                "intervention": event["intervention"],
+            })
+
+    if fired_interventions:
+        st.markdown("---")
+        st.markdown("**Intervention History**")
+
+        for i, item in enumerate(reversed(fired_interventions)):
+            intervention_data = item["intervention"]
+            is_most_recent = (i == 0)
+
+            # Create expander with persona name and turn number
+            expander_label = f'{intervention_data["persona"]} — Turn {item["turn_number"]}'
+
+            with st.expander(expander_label, expanded=is_most_recent):
+                # Full intervention text
+                st.markdown(intervention_data["intervention"])
+
+                # Show image if available
+                persona_key = None
+                for key, persona in PERSONAS.items():
+                    if persona["name"] == intervention_data["persona"]:
+                        persona_key = key
+                        break
+
+                if persona_key:
+                    get_persona_image_or_placeholder(persona_key, intervention_data["colour"])
+
     # Show turn progress
     st.markdown("---")
-    st.markdown(f"**Turn {st.session_state.current_turn + 1} of {len(events)}**")
+    st.markdown(f"**Turn {st.session_state.display_turn} of {len(events)}**")
     st.progress(
-        (st.session_state.current_turn + 1) / len(events), text="Progress"
+        min(st.session_state.display_turn / len(events), 1.0), text="Progress"
     )
-
-# Pause auto-play when an intervention fires (presenter reads the card)
-if st.session_state.get("playing"):
-    current_event = events[st.session_state.current_turn]
-    if current_event["intervention"]:
-        st.session_state.playing = False
-        st.rerun()
