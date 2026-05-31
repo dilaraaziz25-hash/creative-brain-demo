@@ -61,12 +61,14 @@ def detect_pattern(chunk: list[dict]) -> str | None:
 
     system_prompt = f"""You are an expert facilitator analyzing meeting transcripts for team dynamics patterns.
 
-Detect exactly ONE of these patterns in the dialogue:
-- groupthink: The team is rushing to consensus, suppressing dissent, or defaulting to past solutions without scrutiny
-- assumption_unchallenged: Key assumptions are stated as facts without examination
-- missing_perspective: A critical viewpoint or expertise is absent from the conversation
-- risk_glossed_over: Potential risks or concerns are acknowledged but quickly dismissed
-- expertise_needed: Team members cite industry norms or standards without data (e.g., "that's standard", "that's what everyone does", "that's normal practice"). External benchmarks, industry data, or expert input would strengthen the decision.
+Detect exactly ONE of these patterns:
+1. groupthink: The team is rushing toward consensus on a major decision without scrutiny. Watch for language like "let's just", "let's not overthink it", "same approach as before" combined with rapid agreement ("Agreed", "Yeah", "Sure") where people accept without questioning. The pattern is agreement-without-examination.
+2. assumption_unchallenged: A team member compares a past solution to a new situation and assumes it will work the same way. Requires: (A) mention of "that worked for X", (B) plan to apply same approach to Y, (C) no one questions if situations are comparable. Example: "warehouse system worked" → "replicate for ERP" without challenging the comparison.
+3. missing_perspective: A critical viewpoint or expertise is absent from the conversation
+4. risk_glossed_over: Potential risks are acknowledged but quickly dismissed
+5. expertise_needed: Team members cite industry norms or standards without data
+
+**If dialogue shows agreement-without-questioning on a decision, choose groupthink. If dialogue shows assumption-comparing, choose assumption_unchallenged.**
 
 Respond with ONLY the pattern name (one word, lowercase with underscores), or "none" if no pattern detected.
 Do not explain. Just the pattern name."""
@@ -99,7 +101,7 @@ def dispatch_persona(pattern: str, chunk: list[dict]) -> dict:
     try:
         message = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=300,
+            max_tokens=1000,
             system=persona["system_prompt"],
             messages=[
                 {
@@ -198,7 +200,7 @@ def run_demo(transcript_path: str, _file_hash: str = "") -> list[dict]:
                         intervention = dispatch_persona(pattern, chunk)
                         if intervention:
                             event["intervention"] = intervention
-                            cooldown[persona_key] = 6
+                            cooldown[persona_key] = 15
 
         events.append(event)
 
