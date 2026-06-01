@@ -1,0 +1,142 @@
+{
+  "transcript_hash": "f1ddf6444786fc5c477264bed97d6b24",
+  "events": [
+    {
+      "turn_index": 0,
+      "speaker": "Sarah",
+      "text": "Right, thanks everyone for joining. Today we need to lock down our digital transformation roadmap for Q3. We've been talking about this for six months, so let's make some actual decisions. I think we just go with what we discussed last time \u2014 migrate everything to the cloud, roll out the new ERP system, and retire the legacy infrastructure.",
+      "intervention": null
+    },
+    {
+      "turn_index": 1,
+      "speaker": "Marcus",
+      "text": "Agreed. We've done this kind of migration before. The playbook is the same \u2014 lift and shift, test in staging, push to prod.",
+      "intervention": null
+    },
+    {
+      "turn_index": 2,
+      "speaker": "Tom",
+      "text": "Yeah that worked fine for the warehouse system. I say we just replicate that approach.",
+      "intervention": null
+    },
+    {
+      "turn_index": 3,
+      "speaker": "Priya",
+      "text": "The budget looks manageable if we stick to the same vendor we used last time. I don't see a reason to shop around.",
+      "intervention": {
+        "persona": "Challenge Assumptions",
+        "persona_key": "challenger",
+        "colour": "#7F77DD",
+        "pattern": "assumption_unchallenged",
+        "question": "Why are you treating a digital transformation like a furniture rearrangement when your competitors are rebuilding the house from scratch?",
+        "context": "This team is defaulting to 'lift and shift' \u2014 the laziest possible interpretation of transformation \u2014 because it worked once on a warehouse system. The radical alternative they're sleepwalking past is using this moment to fundamentally re-architect how the business operates, not just move the same broken processes to shinier infrastructure."
+      }
+    },
+    {
+      "turn_index": 4,
+      "speaker": "Sarah",
+      "text": "Great, so we're aligned. Cloud migration, same vendor, same approach. I'll draft the proposal \u2014",
+      "intervention": null
+    },
+    {
+      "turn_index": 5,
+      "speaker": "Marcus",
+      "text": "Actually, before we lock that in \u2014 should we think about whether lift-and-shift is really the right call here? The ERP migration is a lot more complex than the warehouse system.",
+      "intervention": null
+    },
+    {
+      "turn_index": 6,
+      "speaker": "Sarah",
+      "text": "Fair point. But we're under pressure to show progress. Let's not overthink it.",
+      "intervention": null
+    },
+    {
+      "turn_index": 7,
+      "speaker": "Tom",
+      "text": "Agreed, let's just move.",
+      "intervention": null
+    },
+    {
+      "turn_index": 8,
+      "speaker": "Lisa",
+      "text": "I do want to flag something \u2014 we haven't talked at all about the people side of this. We're rolling out a completely new ERP to 400 staff and nobody's mentioned training or change management.",
+      "intervention": {
+        "persona": "Surface Hidden Risks",
+        "persona_key": "pressure_tester",
+        "colour": "#D85A30",
+        "pattern": "risk_glossed_over",
+        "question": "If lift-and-shift fails at month two because the ERP's custom configurations don't survive the migration, who in this room is prepared to tell the client they traded technical integrity for the appearance of momentum?",
+        "context": "The team is conflating 'showing progress' with 'making the right call' \u2014 and nobody has actually challenged whether those two things are the same here. Lisa's change management flag and Marcus's complexity concern are being steamrolled by social pressure, not logic; facing this now means the team either justifies the decision with evidence or admits they're moving fast to feel good, not because the approach is sound."
+      }
+    },
+    {
+      "turn_index": 9,
+      "speaker": "Sarah",
+      "text": "We'll handle that in the implementation phase.",
+      "intervention": null
+    },
+    {
+      "turn_index": 10,
+      "speaker": "Priya",
+      "text": "I'll be honest \u2014 I'm a bit worried about cost overruns. ERP migrations almost always go over budget. But I don't want to slow things down.",
+      "intervention": null
+    },
+    {
+      "turn_index": 11,
+      "speaker": "Marcus",
+      "text": "Let's just set a 20% contingency and move on.",
+      "intervention": {
+        "persona": "Bridge to Delivery",
+        "persona_key": "integrator",
+        "colour": "#2BAFB3",
+        "pattern": "delivery_gap",
+        "question": "Are we embedding change management and training into the core delivery architecture right now, or are we designing a system that 400 people will resist on day one?",
+        "context": "The team is deferring the people side to 'implementation phase' while simultaneously trying to contain budget risk with a flat contingency \u2014 these two decisions are in direct conflict, because underfunded change management is the single most common driver of ERP cost overruns. Locking in a change and training model now, with its own budget line and ownership, would actually shrink the overrun risk Priya is worried about rather than just absorbing it."
+      }
+    },
+    {
+      "turn_index": 12,
+      "speaker": "Sarah",
+      "text": "I think 20% is pretty standard for this kind of project isn't it? That's what everyone does.",
+      "intervention": null
+    },
+    {
+      "turn_index": 13,
+      "speaker": "Sarah",
+      "text": "Good. So \u2014 cloud migration, same vendor, lift-and-shift, 20% contingency. Are we done?",
+      "intervention": null
+    },
+    {
+      "turn_index": 14,
+      "speaker": "Tom",
+      "text": "I think so.",
+      "intervention": null
+    },
+    {
+      "turn_index": 15,
+      "speaker": "Marcus",
+      "text": "Yeah.",
+      "intervention": {
+        "persona": "Challenge Assumptions",
+        "persona_key": "challenger",
+        "colour": "#7F77DD",
+        "pattern": "assumption_unchallenged",
+        "question": "Who told you 'what everyone does' was a strategy and not just a way to avoid thinking?",
+        "context": "The team is defaulting to lift-and-shift with the same vendor and a cargo-culted 20% contingency \u2014 nobody has questioned whether migrating to the same architecture in the cloud is worth doing at all. The radical alternative they're sleepwalking past is using this migration as the forcing function to re-architect, switch vendors, or challenge whether the workload should even exist."
+      }
+    },
+    {
+      "turn_index": 16,
+      "speaker": "Lisa",
+      "text": "I still think we need a proper change management plan but... okay.",
+      "intervention": {
+        "persona": "Surface Hidden Risks",
+        "persona_key": "pressure_tester",
+        "colour": "#D85A30",
+        "pattern": "risk_glossed_over",
+        "question": "Lisa, what specifically breaks without a change management plan, and why did you let three words and a pause bury it?",
+        "context": "A dissenting voice just capitulated under social pressure without the objection being resolved \u2014 it was silenced, not answered. If the migration hits adoption failure or operational resistance in week six, the autopsy will show this exact moment where the team knew and chose comfort over clarity."
+      }
+    }
+  ]
+}

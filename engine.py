@@ -9,11 +9,12 @@ from personas import PERSONAS
 client = Anthropic()
 
 PATTERN_TO_PERSONA = {
-    "groupthink": "anarchist",
-    "assumption_unchallenged": "cartographer",
-    "missing_perspective": "fool",
-    "risk_glossed_over": "devils_advocate",
-    "expertise_needed": "industry_sme",
+    "scope_too_safe": "anchor",
+    "assumption_unchallenged": "challenger",
+    "missing_external_evidence": "benchmarker",
+    "analysis_paralysis": "experimenter",
+    "risk_glossed_over": "pressure_tester",
+    "delivery_gap": "integrator",
 }
 
 AVAILABLE_PATTERNS = ", ".join(PATTERN_TO_PERSONA.keys())
@@ -24,16 +25,13 @@ def parse_transcript(transcript_path: str) -> list[dict]:
     with open(transcript_path, "r") as f:
         content = f.read()
 
-    # Extract lines after the header/participants section
     lines = content.split("\n")
     turns = []
 
     for line in lines:
-        # Skip headers and empty lines
         if line.startswith("#") or line.startswith("Participants:") or not line.strip():
             continue
 
-        # Match "Speaker: text"
         match = re.match(r"^(\w+):\s+(.+)$", line.strip())
         if match:
             speaker, text = match.groups()
@@ -55,20 +53,18 @@ def detect_pattern(chunk: list[dict]) -> str | None:
     """Detect a pattern in a chunk using Claude Haiku."""
     chunk_text = "\n".join([f"{turn['speaker']}: {turn['text']}" for turn in chunk])
 
-    # Skip pattern detection on very short chunks (e.g., "I think so", "Yeah")
     if len(chunk_text) < 100:
         return None
 
     system_prompt = f"""You are an expert facilitator analyzing meeting transcripts for team dynamics patterns.
 
 Detect exactly ONE of these patterns:
-1. groupthink: The team is rushing toward consensus on a major decision without scrutiny. Watch for language like "let's just", "let's not overthink it", "same approach as before" combined with rapid agreement ("Agreed", "Yeah", "Sure") where people accept without questioning. The pattern is agreement-without-examination.
-2. assumption_unchallenged: A team member compares a past solution to a new situation and assumes it will work the same way. Requires: (A) mention of "that worked for X", (B) plan to apply same approach to Y, (C) no one questions if situations are comparable. Example: "warehouse system worked" → "replicate for ERP" without challenging the comparison.
-3. missing_perspective: A critical viewpoint or expertise is absent from the conversation
-4. risk_glossed_over: Potential risks are acknowledged but quickly dismissed
-5. expertise_needed: Team members cite industry norms or standards without data
-
-**If dialogue shows agreement-without-questioning on a decision, choose groupthink. If dialogue shows assumption-comparing, choose assumption_unchallenged.**
+1. scope_too_safe: The team is converging on an MVP or incremental version when a bolder, more ambitious approach is possible. Watch for "MVP", "phase one", "just deliver", "good enough" without exploring what a bolder version could unlock.
+2. assumption_unchallenged: A team member assumes a past solution applies directly to a new situation without scrutiny. Requires: (A) mention of "that worked for X", (B) plan to apply same approach to Y, (C) no one questions if situations are comparable.
+3. missing_external_evidence: A critical decision is being made WITHOUT consulting external benchmarks, market data, competitor examples, or outside-in evidence. Triggers: Decision made/dismissed without any mention of comparable data, competitor moves, market research, benchmarks, or external validation. Even dismissing a data point (like a price signal) without comparing to market context. Most sensitive pattern — fire whenever external reference points are absent from a decision point.
+4. analysis_paralysis: The team is stuck in discussion, complexity, or risk-aversion when a small experiment, prototype, or quick test would unlock progress. Watch for "too complex", "later phase", "handle later", "if we have time".
+5. risk_glossed_over: Potential risks are acknowledged but quickly dismissed without honest examination. Watch for "should be fine", "won't happen", "address that later", "consensus" that masks unexamined concerns.
+6. delivery_gap: The team is skipping critical design-to-delivery questions (platform fit, ownership, MVP scope, build risk) before handing off to the build team.
 
 Respond with ONLY the pattern name (one word, lowercase with underscores), or "none" if no pattern detected.
 Do not explain. Just the pattern name."""
@@ -110,13 +106,23 @@ def dispatch_persona(pattern: str, chunk: list[dict]) -> dict:
                 }
             ],
         )
-        intervention_text = message.content[0].text.strip()
+        response_text = message.content[0].text.strip()
+
+        try:
+            parsed = json.loads(response_text)
+            question = parsed.get("question", "")
+            context = parsed.get("context", "")
+        except json.JSONDecodeError:
+            question = ""
+            context = response_text
 
         return {
             "persona": persona["name"],
+            "persona_key": persona_key,
             "colour": persona["colour"],
-            "intervention": intervention_text,
             "pattern": pattern,
+            "question": question,
+            "context": context,
         }
     except Exception as e:
         print(f"Error dispatching persona: {e}")
@@ -150,7 +156,6 @@ def load_cache(transcript_hash: str, cache_path: str = "events_cache.json") -> l
         with open(cache_file, "r") as f:
             cache_data = json.load(f)
 
-        # Verify hash matches
         if cache_data.get("transcript_hash") == transcript_hash:
             return cache_data.get("events")
         return None
@@ -159,12 +164,14 @@ def load_cache(transcript_hash: str, cache_path: str = "events_cache.json") -> l
         return None
 
 
-def run_demo(transcript_path: str, _file_hash: str = "") -> list[dict]:
-    """Run the full pipeline on the transcript. _file_hash is used for cache invalidation."""
+def run_demo(transcript_path: str, cache_key: str = "", _file_hash: str = "") -> list[dict]:
+    """Run the full pipeline on the transcript."""
     turns = parse_transcript(transcript_path)
     chunks = chunk_turns(turns, window_size=4, slide=1)
 
     cooldown = {}
+    firing_count = {}  # Track firings per persona per session
+    max_firings_per_session = 2
     events = []
 
     for turn_idx, turn in enumerate(turns):
@@ -175,37 +182,34 @@ def run_demo(transcript_path: str, _file_hash: str = "") -> list[dict]:
             "intervention": None,
         }
 
-        # Decrement cooldown
         to_remove = [k for k, v in cooldown.items() if v <= 1]
         for k in to_remove:
             del cooldown[k]
         for persona_key in cooldown:
             cooldown[persona_key] -= 1
 
-        # Only analyze for patterns after the first full window (turn 3+)
-        # This ensures patterns develop across multiple turns before firing
         if turn_idx >= 3 and turn_idx < len(chunks) + 3:
-            # Find the chunk that ends at this turn
             chunk_idx = turn_idx - 3
             if chunk_idx >= 0 and chunk_idx < len(chunks):
                 chunk = chunks[chunk_idx]
 
-                # Detect pattern
                 pattern = detect_pattern(chunk)
                 if pattern:
                     persona_key = PATTERN_TO_PERSONA[pattern]
 
-                    # Check cooldown
-                    if persona_key not in cooldown or cooldown[persona_key] <= 0:
+                    # Check both cooldown and max firings per session
+                    if (persona_key not in cooldown or cooldown[persona_key] <= 0) and \
+                       firing_count.get(persona_key, 0) < max_firings_per_session:
                         intervention = dispatch_persona(pattern, chunk)
                         if intervention:
                             event["intervention"] = intervention
-                            cooldown[persona_key] = 15
+                            cooldown[persona_key] = 8
+                            firing_count[persona_key] = firing_count.get(persona_key, 0) + 1
 
         events.append(event)
 
-    # Save to file-based cache for persistence across restarts
     if _file_hash:
-        save_cache(events, _file_hash)
+        cache_path = f"events_cache_{cache_key}.json" if cache_key else "events_cache.json"
+        save_cache(events, _file_hash, cache_path)
 
     return events

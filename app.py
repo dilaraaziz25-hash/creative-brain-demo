@@ -1,13 +1,336 @@
 import streamlit as st
 import time
-import os
+import re
 from pathlib import Path
 from engine import run_demo, get_transcript_hash, load_cache
 from personas import PERSONAS
 
 st.set_page_config(layout="wide", page_title="The Creative Brain")
 
-# Initialize session state FIRST — before any other code
+TRANSCRIPT_MAPPING = {
+    "Digital Transformation": ("transcript.md", "digital_transformation"),
+    "Product Roadmap": ("transcript_product_roadmap.md", "product_roadmap"),
+    "Post-Merger Integration": ("transcript_post_merger.md", "post_merger"),
+}
+
+# Participant tile colours (muted desaturated pastels for Teams aesthetic)
+PARTICIPANT_TILE_COLOURS = [
+    {"tile": "#F2F2F0", "circle": "#D4C5A0"},  # warm sand
+    {"tile": "#F2F2F0", "circle": "#B8BDD4"},  # soft periwinkle
+    {"tile": "#F2F2F0", "circle": "#D4A8A8"},  # dusty rose
+    {"tile": "#F2F2F0", "circle": "#A8C5B8"},  # sage green
+    {"tile": "#F2F2F0", "circle": "#C5B8D4"},  # soft mauve
+    {"tile": "#F2F2F0", "circle": "#B8D4C5"},  # muted mint
+]
+
+st.markdown(
+    """
+    <style>
+    body { background-color: #F2F2F0; }
+    [data-testid="stAppViewContainer"] { background-color: #F2F2F0; }
+
+    /* Make all columns transparent - no background */
+    [data-testid="stColumn"] {
+        background-color: transparent !important;
+        padding: 0 !important;
+    }
+
+    [data-testid="stHorizontalBlock"]:has(
+      [data-testid="stButton"]) {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    div[data-testid="stVerticalBlockBorderWrapper"]:last-of-type {
+        border-left: 2px solid #D0D0D0 !important;
+        padding-left: 8px;
+    }
+
+    /* Right column styling */
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child > div {
+        background-color: #E2E2E0;
+        padding: 16px;
+        border-radius: 8px;
+    }
+
+    .avatar-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 160px);
+        gap: 12px;
+        padding: 0;
+        width: 100%;
+    }
+
+    .avatar-item {
+        width: 160px;
+        height: 160px;
+        background-color: #1E1E2E;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 12px;
+        box-sizing: border-box;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        cursor: default;
+    }
+
+    .avatar-item.active {
+        border: 2px solid var(--person-color, #fff);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), inset 0 0 20px var(--person-color-shadow, rgba(255, 255, 255, 0.1));
+        transform: scale(1.05);
+    }
+
+    .avatar-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 24px;
+        color: white;
+        margin-bottom: 8px;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .avatar-item.active .avatar-circle {
+        animation: pulse-circle 1.5s infinite;
+    }
+
+    @keyframes pulse-circle {
+        0%, 100% {
+            box-shadow: 0 0 0 0 var(--person-color, rgba(255, 255, 255, 0.7));
+        }
+        50% {
+            box-shadow: 0 0 0 12px rgba(255, 255, 255, 0);
+        }
+    }
+
+    .avatar-name {
+        font-weight: 700;
+        font-size: 13px;
+        color: white;
+        margin: 4px 0 2px 0;
+        line-height: 1.2;
+        word-wrap: break-word;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+    }
+
+    .avatar-title {
+        font-size: 11px;
+        font-style: italic;
+        color: #999999;
+        line-height: 1.2;
+        word-wrap: break-word;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+    }
+
+    .persona-card {
+        border-radius: 0.75rem;
+        padding: 16px;
+        background: white;
+        border-left: 4px solid;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1rem;
+    }
+
+    .persona-header-row {
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .persona-pattern {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        color: #999;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .persona-question {
+        font-size: 15px;
+        font-weight: 400;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+        color: #1A1A1A;
+    }
+
+    .listening-placeholder {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #aaa;
+        font-style: italic;
+        font-size: 0.95rem;
+    }
+
+    .transcript-turn {
+        margin-bottom: 1.2rem;
+        padding: 0.75rem;
+    }
+
+    .transcript-turn.with-intervention {
+        border-left: 3px solid;
+        background-color: rgba(0, 0, 0, 0.01);
+    }
+
+    .speaker-name {
+        font-weight: 700;
+        color: #1f1f1f;
+        display: inline;
+        margin-right: 0.25rem;
+    }
+
+    .speaker-title {
+        font-style: italic;
+        color: #888;
+        font-size: 0.85rem;
+        font-weight: normal;
+    }
+
+    .turn-text {
+        color: #484848;
+        line-height: 1.5;
+        margin-top: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .context-label {
+        font-weight: 600;
+        color: #666;
+        margin-top: 0.75rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .expander-content {
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: #555;
+    }
+
+    .history-emoji {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+
+    [data-testid="stExpander"] {
+        border: none;
+        background-color: transparent;
+    }
+
+    .divider {
+        border: none;
+        border-top: 1px solid #e0e0e0;
+        margin: 0.75rem 0;
+    }
+
+    .intervention-history-header {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #999;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+
+    .intervention-history-item {
+        font-size: 0.85rem;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .intervention-history-item [role="button"] {
+        font-size: 0.85rem;
+        padding: 4px 0 !important;
+        min-height: auto !important;
+    }
+
+    .intervention-history-item [data-testid="stExpander"] {
+        padding: 0 !important;
+    }
+
+    .history-question {
+        font-size: 14px;
+        font-weight: 400;
+        color: #1A1A1A;
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .history-context {
+        font-size: 13px;
+        color: #666;
+        line-height: 1.4;
+    }
+
+    img {
+        max-height: 250px;
+        width: 100%;
+        object-fit: cover;
+        margin-top: 0.75rem;
+        border-radius: 0.5rem;
+    }
+
+    .placeholder-box {
+        width: 100%;
+        height: 150px;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-align: center;
+        padding: 1rem;
+        margin-top: 0.75rem;
+    }
+
+    .section-header {
+        font-size: 0.85rem;
+        color: #999;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+        margin-bottom: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .control-button {
+        padding: 0.5rem 1rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+if "selected_transcript" not in st.session_state:
+    st.session_state.selected_transcript = "Digital Transformation"
+if "last_transcript" not in st.session_state:
+    st.session_state.last_transcript = "Digital Transformation"
 if "playing" not in st.session_state:
     st.session_state.playing = False
 if "display_turn" not in st.session_state:
@@ -18,191 +341,61 @@ if "listening_state" not in st.session_state:
     st.session_state.listening_state = False
 if "last_chime_turn" not in st.session_state:
     st.session_state.last_chime_turn = -1
-
-# Custom CSS for styling
-st.markdown(
-    """
-    <style>
-    .transcript-turn {
-        margin-bottom: 1.5rem;
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-    }
-    .transcript-turn.with-intervention {
-        border-left: 4px solid var(--intervention-color);
-        background-color: rgba(255, 255, 255, 0.02);
-    }
-    .speaker-name {
-        font-weight: 700;
-        color: #1f1f1f;
-        margin-bottom: 0.25rem;
-    }
-    .speaker-title {
-        font-style: italic;
-        color: #888;
-        font-size: 0.9em;
-        font-weight: normal;
-    }
-    .turn-text {
-        color: #484848;
-        line-height: 1.5;
-    }
-    .persona-card {
-        border-radius: 0.75rem;
-        padding: 12px 16px;
-        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
-        border: 1px solid #e0e0e0;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        margin-bottom: 12px;
-    }
-    .persona-header {
-        font-size: 1.3rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .persona-pattern {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05rem;
-        color: #888;
-        margin-bottom: 16px;
-        opacity: 0.7;
-    }
-    .persona-text {
-        font-size: 0.95rem;
-        line-height: 1.6;
-        color: #333;
-        margin-bottom: 1rem;
-        max-height: none;
-        overflow: visible;
-    }
-    [data-testid="stMarkdownContainer"] {
-        max-height: none !important;
-        overflow: visible !important;
-        height: auto !important;
-    }
-    [data-testid="stMarkdownContainer"] * {
-        max-height: none !important;
-        overflow: visible !important;
-        height: auto !important;
-    }
-    [data-testid="stMarkdownContainer"] p,
-    [data-testid="stMarkdownContainer"] div {
-        max-height: none !important;
-        overflow: visible !important;
-    }
-    /* Remove height restrictions on expander content */
-    [data-testid="stExpander"] {
-        max-height: none !important;
-        overflow: visible !important;
-    }
-    [data-testid="stExpander"] * {
-        max-height: none !important;
-        overflow: visible !important;
-        height: auto !important;
-    }
-    /* Ensure all block-level elements inside expanders have no height limits */
-    div[role="region"] {
-        max-height: none !important;
-        overflow: visible !important;
-    }
-    div[role="region"] * {
-        max-height: none !important;
-        overflow: visible !important;
-    }
-    /* Nuclear option: remove ALL height restrictions from expander and inner content */
-    [data-testid="stExpander"] [data-testid="stMarkdownContainer"],
-    [data-testid="stExpander"] [data-testid="stMarkdownContainer"] p,
-    [data-testid="stExpander"] [data-testid="stMarkdownContainer"] div {
-        max-height: none !important;
-        overflow: visible !important;
-        height: auto !important;
-        display: block !important;
-    }
-    img {
-        max-height: 300px;
-        width: 100%;
-        object-fit: cover;
-        margin-top: 1rem;
-    }
-    .placeholder-box {
-        width: 100%;
-        height: 150px;
-        border-radius: 0.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-    .listening-placeholder {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: #aaa;
-        font-style: italic;
-    }
-    .control-button {
-        padding: 0.5rem 1rem;
-        margin-right: 0.5rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
+if "intervention_history" not in st.session_state:
+    st.session_state.intervention_history = []
 
 @st.cache_data
-def load_events(_transcript_hash: str):
-    """Load events from file cache or run the pipeline. Hash validates cache."""
-    # Try file-based cache first (survives Streamlit restarts)
-    cached_events = load_cache(_transcript_hash)
+def load_events(_transcript_path: str, _transcript_hash: str, _cache_key: str):
+    """Load events from file cache or run the pipeline."""
+    cached_events = load_cache(_transcript_hash, f"events_cache_{_cache_key}.json")
     if cached_events:
         return cached_events
 
-    # Cache miss: run the pipeline and save results
-    transcript_path = Path(__file__).parent / "transcript.md"
-    return run_demo(str(transcript_path), _file_hash=_transcript_hash)
+    return run_demo(_transcript_path, cache_key=_cache_key, _file_hash=_transcript_hash)
 
 
 def play_intervention_chime():
-    """Play a notification chime when persona intervention fires using Web Audio API."""
-    # Generate unique timestamp to embed in HTML and force fresh render
-    unique_timestamp = int(time.time() * 1000000)
+    """Play a notification chime when persona intervention fires."""
+    unique_id = int(time.time() * 1000000)
 
     chime_html = f"""
     <script>
     (function() {{
-        // Unique ID comment ({unique_timestamp}) ensures each chime renders fresh
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // Create a completely fresh AudioContext instance for this chime
+        const freshAudioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-        // First tone: 1000 Hz for 150ms
-        const osc1 = audioContext.createOscillator();
-        const gain1 = audioContext.createGain();
-        osc1.connect(gain1);
-        gain1.connect(audioContext.destination);
-        osc1.frequency.value = 1000;
-        osc1.type = 'sine';
-        gain1.gain.setValueAtTime(0.15, audioContext.currentTime);
-        gain1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-        osc1.start(audioContext.currentTime);
-        osc1.stop(audioContext.currentTime + 0.15);
+        // First tone: 1000 Hz
+        const oscillator1 = freshAudioContext.createOscillator();
+        const gainNode1 = freshAudioContext.createGain();
+        oscillator1.connect(gainNode1);
+        gainNode1.connect(freshAudioContext.destination);
 
-        // Second tone: 1500 Hz for 150ms, starts 50ms after first tone ends
-        const osc2 = audioContext.createOscillator();
-        const gain2 = audioContext.createGain();
-        osc2.connect(gain2);
-        gain2.connect(audioContext.destination);
-        osc2.frequency.value = 1500;
-        osc2.type = 'sine';
-        gain2.gain.setValueAtTime(0.15, audioContext.currentTime + 0.2);
-        gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.35);
-        osc2.start(audioContext.currentTime + 0.2);
-        osc2.stop(audioContext.currentTime + 0.35);
+        oscillator1.frequency.value = 1000;
+        oscillator1.type = 'sine';
+        gainNode1.gain.setValueAtTime(0.15, freshAudioContext.currentTime);
+        gainNode1.gain.exponentialRampToValueAtTime(0.01, freshAudioContext.currentTime + 0.15);
+        oscillator1.start(freshAudioContext.currentTime);
+        oscillator1.stop(freshAudioContext.currentTime + 0.15);
+
+        // Second tone: 1500 Hz
+        const oscillator2 = freshAudioContext.createOscillator();
+        const gainNode2 = freshAudioContext.createGain();
+        oscillator2.connect(gainNode2);
+        gainNode2.connect(freshAudioContext.destination);
+
+        oscillator2.frequency.value = 1500;
+        oscillator2.type = 'sine';
+        gainNode2.gain.setValueAtTime(0.15, freshAudioContext.currentTime + 0.2);
+        gainNode2.gain.exponentialRampToValueAtTime(0.01, freshAudioContext.currentTime + 0.35);
+        oscillator2.start(freshAudioContext.currentTime + 0.2);
+        oscillator2.stop(freshAudioContext.currentTime + 0.35);
+
+        // Resume audio context if suspended (common in browsers)
+        if (freshAudioContext.state === 'suspended') {{
+            freshAudioContext.resume();
+        }}
     }})();
+    // Unique ID: {unique_id}
     </script>
     """
     st.components.v1.html(chime_html, height=0)
@@ -213,7 +406,6 @@ def get_persona_image_or_placeholder(persona_key: str, colour: str):
     cards_dir = Path(__file__).parent / "cards" / persona_key
     valid_extensions = {".jpg", ".jpeg", ".png", ".webp"}
 
-    # Find images with case-insensitive extension matching
     images = [
         f for f in cards_dir.iterdir()
         if f.is_file() and f.suffix.lower() in valid_extensions
@@ -222,35 +414,224 @@ def get_persona_image_or_placeholder(persona_key: str, colour: str):
     if images:
         st.image(str(images[0]), use_container_width=True)
     else:
-        # Show coloured placeholder
         st.markdown(
             f'<div class="placeholder-box" style="background-color: {colour};">'
-            f"No images yet — drop .jpg, .jpeg, .png, or .webp files in cards/{persona_key}/</div>",
+            f"Drop .jpg, .jpeg, .png, or .webp files in cards/{persona_key}/</div>",
             unsafe_allow_html=True,
         )
 
 
-# Load events (session state flags already initialized above)
-if "events" not in st.session_state:
-    transcript_path = Path(__file__).parent / "transcript.md"
-    transcript_hash = get_transcript_hash(str(transcript_path))
-    st.session_state.events = load_events(transcript_hash)
+def parse_participants(transcript_path: str) -> list[dict]:
+    """Parse participant names and titles from transcript."""
+    with open(transcript_path, "r") as f:
+        for line in f:
+            if line.startswith("Participants:"):
+                participants_line = line.replace("Participants:", "").strip()
+                participants = []
 
-events = st.session_state.events
+                pattern = r"(\w[\w\s]+?)\s+\(([^)]+)\)"
+                matches = re.findall(pattern, participants_line)
 
-# Auto-play loop — simple and direct
-# If current turn has intervention: stop and show card
-# If current turn has no intervention: wait 1.5s and advance to next turn
+                for name, title in matches:
+                    participants.append({
+                        "name": name.strip(),
+                        "title": title.strip(),
+                    })
+                return participants
+
+    return []
+
+
+def get_initials(name: str) -> str:
+    """Get first 2 letters of first name."""
+    parts = name.split()
+    if len(parts) > 0:
+        return parts[0][:2].upper()
+    return "?"
+
+
+def render_avatar_grid(participants: list[dict], current_speaker: str, tile_colours: list[dict]):
+    """Render avatar grid with flexible sizing and pastel colours."""
+    colour_map = {p["name"]: tile_colours[i % len(tile_colours)] for i, p in enumerate(participants)}
+
+    # Build complete HTML with embedded CSS
+    avatar_html = """
+    <style>
+    .pastel-avatar-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        width: 100%;
+        background-color: #F2F2F0;
+        padding: 8px;
+        box-sizing: border-box;
+        margin: 0;
+    }
+
+    .pastel-avatar-tile {
+        aspect-ratio: 1 / 1;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border: 1px solid #E0E0E0;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        padding: 12px;
+    }
+
+    .pastel-avatar-tile.active {
+        border: 2px solid #6B8FC9;
+        box-shadow: 0 0 12px rgba(107, 143, 201, 0.3);
+        transform: scale(1.02);
+    }
+
+    .pastel-avatar-circle {
+        width: 50%;
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 28px;
+        color: #2D2D2D;
+        margin-bottom: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .pastel-avatar-circle.active {
+        animation: subtle-pulse 1.5s infinite;
+    }
+
+    @keyframes subtle-pulse {
+        0%, 100% {
+            box-shadow: 0 0 0 0 var(--circle-color);
+        }
+        50% {
+            box-shadow: 0 0 0 8px rgba(0, 0, 0, 0.05);
+        }
+    }
+
+    .pastel-avatar-name {
+        font-weight: 700;
+        font-size: 13px;
+        color: #333;
+        margin: 4px 0 2px 0;
+        line-height: 1.2;
+        word-wrap: break-word;
+    }
+
+    .pastel-avatar-title {
+        font-size: 10px;
+        font-style: italic;
+        color: #666;
+        line-height: 1.2;
+        word-wrap: break-word;
+    }
+
+    .pastel-avatar-placeholder {
+        aspect-ratio: 1 / 1;
+        background-color: transparent !important;
+        border: none !important;
+        border-radius: 12px;
+        box-shadow: none !important;
+    }
+    </style>
+
+    <div class="pastel-avatar-grid">
+    """
+
+    for participant in participants:
+        name = participant["name"]
+        title = participant["title"]
+        initials = get_initials(name)
+        colours = colour_map[name]
+        tile_colour = colours["tile"]
+        circle_colour = colours["circle"]
+        is_active = "active" if name == current_speaker else ""
+
+        avatar_html += f"""
+    <div class="pastel-avatar-tile {is_active}" style="background-color: {tile_colour};">
+        <div class="pastel-avatar-circle {is_active}" style="background-color: {circle_colour}; --circle-color: {circle_colour};">
+            {initials}
+        </div>
+        <div class="pastel-avatar-name">{name}</div>
+        <div class="pastel-avatar-title">{title}</div>
+    </div>
+        """
+
+    # Add placeholder tiles to fill out the grid to a multiple of 3
+    remainder = len(participants) % 3
+    if remainder != 0:
+        placeholders = 3 - remainder
+        for _ in range(placeholders):
+            avatar_html += '\n    <div class="pastel-avatar-placeholder"></div>'
+
+    avatar_html += "\n    </div>"
+
+    # Use flexible height based on number of rows
+    rows = (len(participants) + 2) // 3
+    # Each tile is ~(1fr), gaps are 8px, plus padding
+    grid_height = 400 + (rows - 1) * 50
+    st.components.v1.html(avatar_html, height=grid_height)
+
+
+st.markdown("<h2>🧠 The Creative Brain</h2>", unsafe_allow_html=True)
+
+st.markdown('<div style="max-width:300px">', unsafe_allow_html=True)
+new_transcript = st.selectbox(
+    "Select Transcript",
+    options=list(TRANSCRIPT_MAPPING.keys()),
+    key="transcript_selector",
+    index=list(TRANSCRIPT_MAPPING.keys()).index(st.session_state.selected_transcript) if "selected_transcript" in st.session_state else 0
+)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Update selected transcript immediately if it changed
+if "last_transcript" not in st.session_state:
+    st.session_state.last_transcript = st.session_state.selected_transcript
+
+if new_transcript != st.session_state.last_transcript:
+    # Clear Streamlit cache to force reload of transcript data
+    st.cache_data.clear()
+
+    # Clear ALL session state completely
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+
+    # Re-initialize with new transcript
+    st.session_state.selected_transcript = new_transcript
+    st.session_state.last_transcript = new_transcript
+    st.session_state.playing = False
+    st.session_state.display_turn = 0
+    st.session_state.current_turn = -1
+    st.session_state.listening_state = False
+    st.session_state.last_chime_turn = -1
+    st.session_state.intervention_history = []
+    st.rerun()
+
+# ALWAYS use the current selectbox value
+st.session_state.selected_transcript = new_transcript
+
+# Load transcript based on current selection
+transcript_file, cache_key = TRANSCRIPT_MAPPING[st.session_state.selected_transcript]
+current_transcript_path = Path(__file__).parent / transcript_file
+
+transcript_hash = get_transcript_hash(str(current_transcript_path))
+events = load_events(str(current_transcript_path), transcript_hash, cache_key)
+
+# Playback loop
 if st.session_state.get("playing"):
     if st.session_state.current_turn >= 0 and st.session_state.current_turn < len(events):
         current_event = events[st.session_state.current_turn]
 
         if current_event["intervention"]:
-            # Current turn has an intervention — stop and show the card
             st.session_state.playing = False
             st.rerun()
         else:
-            # Current turn has no intervention — wait and advance
             time.sleep(1.5)
             if st.session_state.display_turn < len(events):
                 st.session_state.display_turn += 1
@@ -259,95 +640,152 @@ if st.session_state.get("playing"):
                 st.session_state.playing = False
             st.rerun()
 
-st.title("🧠 The Creative Brain")
-st.markdown(
-    "An AI meeting facilitator that detects groupthink and injects persona interventions in real time."
-)
+st.markdown("---")
 
-# Speaker job titles mapping
-SPEAKER_TITLES = {
-    "Sarah": "Project Lead",
-    "Marcus": "IT Director",
-    "Priya": "Finance",
-    "Tom": "Operations",
-    "Lisa": "HR",
-}
+col_play, col_next, col_reset = st.columns([1, 1, 1])
 
-# Layout: two columns
-col_transcript, col_card = st.columns([0.65, 0.35])
+has_intervention = (st.session_state.current_turn >= 0 and
+                   st.session_state.current_turn < len(events) and
+                   events[st.session_state.current_turn]["intervention"] is not None)
 
-with col_transcript:
-    st.subheader("Meeting Transcript")
+if st.session_state.playing:
+    play_label = "⏸ Pause"
+elif has_intervention and st.session_state.display_turn > 0:
+    play_label = "▶ Continue"
+else:
+    play_label = "▶ Play"
 
-    # Playback controls
-    col_play, col_next, col_reset = st.columns([0.15, 0.15, 0.15])
-
-    # Determine play button label dynamically
-    has_intervention = (st.session_state.current_turn >= 0 and
-                       st.session_state.current_turn < len(events) and
-                       events[st.session_state.current_turn]["intervention"] is not None)
-
-    if st.session_state.playing:
-        play_label = "⏸ Pause"
-    elif has_intervention and st.session_state.display_turn > 0:
-        # "Continue" only shows if paused on intervention (not on first load)
-        play_label = "▶ Continue"
-    else:
-        play_label = "▶ Play"
-
-    with col_play:
-        if st.button(play_label, key="play_btn"):
-            if st.session_state.playing:
-                # Pause while playing
-                st.session_state.playing = False
-            else:
-                # Start or resume playing
-                if st.session_state.display_turn == 0:
-                    # Starting from beginning: show turn 0 and process it
-                    st.session_state.display_turn = 1
-                    st.session_state.current_turn = 0
-                elif has_intervention and st.session_state.display_turn < len(events):
-                    # Paused on intervention: skip past it to continue
-                    st.session_state.display_turn += 1
-                    st.session_state.current_turn = st.session_state.display_turn - 1
-                # If not at beginning and no intervention, just resume as-is
-
-                if st.session_state.display_turn <= len(events):
-                    st.session_state.playing = True
-                    st.rerun()
-
-    with col_next:
-        if st.button("Next turn →", key="next_btn"):
-            if st.session_state.display_turn < len(events):
-                st.session_state.display_turn += 1
-                st.session_state.current_turn = min(st.session_state.display_turn - 1, len(events) - 1)
-    with col_reset:
-        if st.button("↺ Reset", key="reset_btn"):
-            st.session_state.display_turn = 0
-            st.session_state.current_turn = -1
+with col_play:
+    if st.button(play_label, key="play_btn"):
+        if st.session_state.playing:
             st.session_state.playing = False
+        else:
+            if st.session_state.display_turn == 0:
+                st.session_state.display_turn = 1
+                st.session_state.current_turn = 0
+            elif has_intervention and st.session_state.display_turn < len(events):
+                st.session_state.display_turn += 1
+                st.session_state.current_turn = st.session_state.display_turn - 1
 
+            if st.session_state.display_turn <= len(events):
+                st.session_state.playing = True
+                st.rerun()
+
+with col_next:
+    if st.button("Next turn →", key="next_btn"):
+        if st.session_state.display_turn < len(events):
+            st.session_state.display_turn += 1
+            st.session_state.current_turn = min(st.session_state.display_turn - 1, len(events) - 1)
+
+with col_reset:
+    if st.button("↺ Reset", key="reset_btn"):
+        st.session_state.display_turn = 0
+        st.session_state.current_turn = -1
+        st.session_state.playing = False
+        st.session_state.intervention_history = []
+
+st.markdown("---")
+
+col_avatar, col_right = st.columns([0.65, 0.35])
+
+# LEFT COLUMN: AVATAR GRID ONLY
+with col_avatar:
+    st.markdown('<div class="section-header">👥 In this meeting</div>', unsafe_allow_html=True)
+
+    participants = parse_participants(str(current_transcript_path))
+
+    current_speaker = ""
+    if st.session_state.current_turn >= 0 and st.session_state.current_turn < len(events):
+        current_speaker = events[st.session_state.current_turn]["speaker"]
+
+    render_avatar_grid(participants, current_speaker, PARTICIPANT_TILE_COLOURS)
+
+# RIGHT COLUMN: CREATIVE BRAIN PANEL + TRANSCRIPT
+with col_right:
+    st.markdown('<div class="section-header">🧠 Creative Brain</div>', unsafe_allow_html=True)
+
+    current_event = None
+    intervention = None
+    if st.session_state.current_turn >= 0 and st.session_state.current_turn < len(events):
+        current_event = events[st.session_state.current_turn]
+        intervention = current_event["intervention"]
+
+    should_show_intervention = intervention and (st.session_state.display_turn > 0 or st.session_state.playing)
+
+    if should_show_intervention:
+        if st.session_state.current_turn != st.session_state.last_chime_turn:
+            play_intervention_chime()
+            st.session_state.last_chime_turn = st.session_state.current_turn
+            # Add to intervention history (fires only once per intervention)
+            st.session_state.intervention_history.append({
+                "turn_number": st.session_state.current_turn + 1,
+                "intervention": intervention
+            })
+
+        persona_html = f"""
+        <div class="persona-card" style="border-left-color: {intervention['colour']}; background-color: rgba({int(intervention['colour'][1:3], 16)}, {int(intervention['colour'][3:5], 16)}, {int(intervention['colour'][5:7], 16)}, 0.03);">
+            <div class="persona-header-row" style="color: {intervention['colour']};">
+                {intervention['persona']}
+            </div>
+            <div class="persona-pattern">{intervention['pattern'].replace('_', ' ').upper()}</div>
+            <div class="persona-question">{intervention['question']}</div>
+        </div>
+        """
+        st.markdown(persona_html, unsafe_allow_html=True)
+
+        with st.expander("▾ Why the Brain asked this", expanded=False):
+            st.markdown(f"<div class='context-label'>💭 Context</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='expander-content'>{intervention['context']}</div>", unsafe_allow_html=True)
+
+            st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+
+            persona_key = intervention.get("persona_key")
+            if persona_key:
+                get_persona_image_or_placeholder(persona_key, intervention['colour'])
+
+    else:
+        st.markdown(
+            '<div class="listening-placeholder">🎧 Listening...</div>',
+            unsafe_allow_html=True,
+        )
+
+    # INTERVENTION HISTORY (COMPACT) - Display independently from current intervention
+    # Always show if there's history, regardless of whether a current intervention is showing
+    if st.session_state.intervention_history:
+        st.markdown('<div class="intervention-history-header">Previous nudges</div>', unsafe_allow_html=True)
+
+        # Display in reverse order (most recent first)
+        for item in reversed(st.session_state.intervention_history):
+            intervention_data = item["intervention"]
+            persona_name = intervention_data["persona"]
+            colour = intervention_data["colour"]
+
+            # Use Unicode filled circle with colour styling
+            label = f"● {persona_name} · Turn {item['turn_number']}"
+
+            with st.expander(label, expanded=False):
+                # Add colour to the circle using markdown
+                st.markdown(f"<span style='color: {colour};'>●</span> **{persona_name}**", unsafe_allow_html=True)
+                st.markdown(f"<div class='history-question'>{intervention_data['question']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='history-context'><strong>Context:</strong> {intervention_data['context']}</div>", unsafe_allow_html=True)
+
+    # BOTTOM: LIVE TRANSCRIPT
     st.markdown("---")
+    st.markdown('<div class="section-header">📝 Transcript</div>', unsafe_allow_html=True)
 
-    # Transcript display — only show if playing or we've started (display_turn > 0)
     if st.session_state.playing or st.session_state.display_turn > 0:
         transcript_container = st.container()
         with transcript_container:
             for idx in range(min(st.session_state.display_turn, len(events))):
                 event = events[idx]
                 intervention = event["intervention"]
-                speaker = event['speaker']
-                job_title = SPEAKER_TITLES.get(speaker, "")
+                speaker = event["speaker"]
 
-                # Build turn HTML
-                border_color = (
-                    intervention["colour"] if intervention else "transparent"
-                )
-                title_html = f', <span class="speaker-title">{job_title}</span>' if job_title else ""
+                border_color = intervention["colour"] if intervention else "transparent"
                 turn_html = f"""
                 <div class="transcript-turn {'with-intervention' if intervention else ''}"
-                     style="--intervention-color: {border_color};">
-                    <div class="speaker-name">{speaker}{title_html}</div>
+                     style="border-left-color: {border_color};">
+                    <span class="speaker-name">{speaker}</span>
                     <div class="turn-text">{event['text']}</div>
                 </div>
                 """
@@ -366,101 +804,6 @@ with col_transcript:
                 unsafe_allow_html=True,
             )
 
-with col_card:
-    st.subheader("Persona Intervention")
-
-    # Show current turn's intervention or listening placeholder
-    current_event = None
-    intervention = None
-    if st.session_state.current_turn >= 0 and st.session_state.current_turn < len(events):
-        current_event = events[st.session_state.current_turn]
-        intervention = current_event["intervention"]
-
-    # Only show intervention if we've started playback (display_turn > 0) or are actively playing
-    should_show_intervention = intervention and (st.session_state.display_turn > 0 or st.session_state.playing)
-
-    if should_show_intervention:
-        # Play chime once when intervention first appears
-        if st.session_state.current_turn != st.session_state.last_chime_turn:
-            play_intervention_chime()
-            st.session_state.last_chime_turn = st.session_state.current_turn
-
-        # Build persona card header and pattern
-        persona_html = f"""
-        <div class="persona-card">
-            <div class="persona-header" style="color: {intervention['colour']};">
-                ✦ {intervention['persona']}
-            </div>
-            <div class="persona-pattern">{intervention['pattern'].replace('_', ' ')}</div>
-        </div>
-        """
-        st.markdown(persona_html, unsafe_allow_html=True)
-
-        # Render intervention text as markdown to support formatting (**bold**, ##headers, etc.)
-        st.markdown(intervention['intervention'])
-
-        # Show image or placeholder
-        persona_key = None
-        for key, persona in PERSONAS.items():
-            if persona["name"] == intervention["persona"]:
-                persona_key = key
-                break
-
-        if persona_key:
-            get_persona_image_or_placeholder(persona_key, intervention["colour"])
-    else:
-        st.markdown(
-            '<div class="listening-placeholder">🎧 Listening...</div>',
-            unsafe_allow_html=True,
-        )
-
-    # Intervention history section — show only interventions from previous turns
-    fired_interventions = []
-    for idx in range(min(st.session_state.display_turn - 1, len(events))):
-        event = events[idx]
-        if event["intervention"]:
-            fired_interventions.append({
-                "turn_number": idx + 1,
-                "intervention": event["intervention"],
-            })
-
-    if fired_interventions:
-        st.markdown("---")
-        st.markdown("**Intervention History**")
-
-        # Mapping of persona names to colored circle emojis
-        persona_emoji = {
-            "The Anarchist": "🟣",
-            "The Cartographer": "🟢",
-            "The Fool": "🟠",
-            "The Devil's Advocate": "🔴",
-            "The Industry SME": "🔵",
-        }
-
-        for i, item in enumerate(reversed(fired_interventions)):
-            intervention_data = item["intervention"]
-
-            # Create expander label with colored emoji indicator and persona name
-            emoji = persona_emoji.get(intervention_data["persona"], "•")
-            expander_label = f'{emoji} {intervention_data["persona"]} — Turn {item["turn_number"]}'
-
-            with st.expander(expander_label, expanded=False):
-                # Full intervention text
-                st.markdown(intervention_data["intervention"])
-
-                # Show image if available
-                persona_key = None
-                for key, persona in PERSONAS.items():
-                    if persona["name"] == intervention_data["persona"]:
-                        persona_key = key
-                        break
-
-                if persona_key:
-                    get_persona_image_or_placeholder(persona_key, intervention_data["colour"])
-
-    # Show turn progress
     st.markdown("---")
-    st.markdown(f"**Turn {st.session_state.display_turn} of {len(events)}**")
-    st.progress(
-        min(st.session_state.display_turn / len(events), 1.0), text="Progress"
-    )
+    progress = min(st.session_state.display_turn / len(events), 1.0) if events else 0
+    st.progress(progress, text=f"Turn {st.session_state.display_turn} of {len(events)}")
