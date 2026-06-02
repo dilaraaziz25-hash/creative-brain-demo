@@ -1,16 +1,23 @@
 import streamlit as st
 import time
 import re
+import os
+import base64
 from pathlib import Path
 from engine import run_demo, get_transcript_hash, load_cache
 from personas import PERSONAS
 
 st.set_page_config(layout="wide", page_title="The Creative Brain")
 
+# Load brain icon as base64
+icon_path = os.path.join(os.path.dirname(__file__), "brain_icon.png")
+with open(icon_path, "rb") as f:
+    icon_b64 = base64.b64encode(f.read()).decode()
+
 TRANSCRIPT_MAPPING = {
-    "Digital Transformation": ("transcript.md", "digital_transformation"),
-    "Product Roadmap": ("transcript_product_roadmap.md", "product_roadmap"),
-    "Post-Merger Integration": ("transcript_post_merger.md", "post_merger"),
+    "DIGITAL TRANSFORMATION": ("transcript.md", "digital_transformation"),
+    "PRODUCT ROADMAP": ("transcript_product_roadmap.md", "product_roadmap"),
+    "POST-MERGER INTEGRATION": ("transcript_post_merger.md", "post_merger"),
 }
 
 # Participant tile colours (muted desaturated pastels for Teams aesthetic)
@@ -44,6 +51,13 @@ st.markdown(
     div[data-testid="stVerticalBlockBorderWrapper"]:last-of-type {
         border-left: 2px solid #D0D0D0 !important;
         padding-left: 8px;
+    }
+
+    /* Transcript selector dropdown styling */
+    [data-testid="stSelectbox"] > div > div {
+        background-color: #FFFFFF !important;
+        border: 1px solid #D0D0D0 !important;
+        border-radius: 8px !important;
     }
 
     /* Right column styling */
@@ -110,6 +124,35 @@ st.markdown(
         50% {
             box-shadow: 0 0 0 12px rgba(255, 255, 255, 0);
         }
+    }
+
+    @keyframes sparkle {
+        0%   { filter: brightness(1) drop-shadow(0 0 4px rgba(100,150,255,0.6)); }
+        50%  { filter: brightness(1.3) drop-shadow(0 0 14px rgba(100,150,255,0.9)); }
+        100% { filter: brightness(1) drop-shadow(0 0 4px rgba(100,150,255,0.6)); }
+    }
+
+    .persona-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .persona-icon.sparkling {
+        animation: sparkle 1.5s ease-in-out infinite;
+    }
+
+    .persona-icon.listening {
+        opacity: 0.3;
+    }
+
+    .persona-header-with-icon {
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
     .avatar-name {
@@ -328,9 +371,9 @@ st.markdown(
 )
 
 if "selected_transcript" not in st.session_state:
-    st.session_state.selected_transcript = "Digital Transformation"
+    st.session_state.selected_transcript = "DIGITAL TRANSFORMATION"
 if "last_transcript" not in st.session_state:
-    st.session_state.last_transcript = "Digital Transformation"
+    st.session_state.last_transcript = "DIGITAL TRANSFORMATION"
 if "playing" not in st.session_state:
     st.session_state.playing = False
 if "display_turn" not in st.session_state:
@@ -581,9 +624,10 @@ def render_avatar_grid(participants: list[dict], current_speaker: str, tile_colo
 
 st.markdown("<h2>🧠 The Creative Brain</h2>", unsafe_allow_html=True)
 
+st.markdown("<b>Select Transcript</b>", unsafe_allow_html=True)
 st.markdown('<div style="max-width:300px">', unsafe_allow_html=True)
 new_transcript = st.selectbox(
-    "Select Transcript",
+    "",
     options=list(TRANSCRIPT_MAPPING.keys()),
     key="transcript_selector",
     index=list(TRANSCRIPT_MAPPING.keys()).index(st.session_state.selected_transcript) if "selected_transcript" in st.session_state else 0
@@ -642,7 +686,7 @@ if st.session_state.get("playing"):
 
 st.markdown("---")
 
-col_play, col_next, col_reset = st.columns([1, 1, 1])
+col_play, col_next, col_reset, col_spacer = st.columns([1, 1, 1, 6])
 
 has_intervention = (st.session_state.current_turn >= 0 and
                    st.session_state.current_turn < len(events) and
@@ -722,11 +766,38 @@ with col_right:
                 "intervention": intervention
             })
 
+        # Display brain icon and persona name on the same line
+        st.components.v1.html(f"""
+        <style>
+        @keyframes sparkle {{
+            0%   {{
+                filter: brightness(1) drop-shadow(0 0 8px rgba(100,180,255,0.9));
+                transform: scale(1);
+            }}
+            50%  {{
+                filter: brightness(1.6) drop-shadow(0 0 28px rgba(100,180,255,1.0)) drop-shadow(0 0 50px rgba(150,200,255,0.7));
+                transform: scale(1.12);
+            }}
+            100% {{
+                filter: brightness(1) drop-shadow(0 0 8px rgba(100,180,255,0.9));
+                transform: scale(1);
+            }}
+        }}
+        .row {{ display:flex; align-items:center; gap:12px; }}
+        .brain-icon {{ width:48px; height:48px; border-radius:50%;
+            animation: sparkle 1.2s ease-in-out infinite; }}
+        .persona-name {{ font-size:18px; font-weight:600;
+            color:{intervention['colour']}; font-family:sans-serif; }}
+        </style>
+        <div class="row">
+            <img src="data:image/png;base64,{icon_b64}" class="brain-icon">
+            <span class="persona-name">{intervention['persona']}</span>
+        </div>
+        """, height=70)
+
+        # Display persona card without the name (now displayed inline above)
         persona_html = f"""
-        <div class="persona-card" style="border-left-color: {intervention['colour']}; background-color: rgba({int(intervention['colour'][1:3], 16)}, {int(intervention['colour'][3:5], 16)}, {int(intervention['colour'][5:7], 16)}, 0.03);">
-            <div class="persona-header-row" style="color: {intervention['colour']};">
-                {intervention['persona']}
-            </div>
+        <div class="persona-card" style="border-left-color: {intervention['colour']}; background-color: rgba({int(intervention['colour'][1:3], 16)}, {int(intervention['colour'][3:5], 16)}, {int(intervention['colour'][5:7], 16)}, 0.03); margin-top: 12px;">
             <div class="persona-pattern">{intervention['pattern'].replace('_', ' ').upper()}</div>
             <div class="persona-question">{intervention['question']}</div>
         </div>
@@ -744,10 +815,21 @@ with col_right:
                 get_persona_image_or_placeholder(persona_key, intervention['colour'])
 
     else:
-        st.markdown(
-            '<div class="listening-placeholder">🎧 Listening...</div>',
-            unsafe_allow_html=True,
-        )
+        # Display listening state with faded brain icon
+        st.components.v1.html(f"""
+        <style>
+        .brain-icon-listening {{
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            opacity: 0.3;
+        }}
+        </style>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+            <img src="data:image/png;base64,{icon_b64}" class="brain-icon-listening">
+            <div>🎧 Listening...</div>
+        </div>
+        """, height=140)
 
     # INTERVENTION HISTORY (COMPACT) - Display independently from current intervention
     # Always show if there's history, regardless of whether a current intervention is showing
