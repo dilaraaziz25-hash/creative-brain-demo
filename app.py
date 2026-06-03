@@ -284,8 +284,22 @@ st.markdown(
     }
 
     [data-testid="stExpander"] [role="button"] {
-        font-size: 16px !important;
+        font-size: 18px !important;
         font-family: 'Source Sans Pro', sans-serif !important;
+        background-color: #F5F5F5 !important;
+        border-radius: 6px !important;
+        padding: 12px !important;
+    }
+
+    [data-testid="stExpander"] [role="button"]:hover {
+        background-color: #EFEFEF !important;
+    }
+
+    [data-testid="stExpander"] > div:nth-child(2) {
+        background-color: #FAFAFA !important;
+        border-radius: 6px !important;
+        padding: 12px !important;
+        margin-top: 8px !important;
     }
 
     .divider {
