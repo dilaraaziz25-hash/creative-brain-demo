@@ -283,6 +283,11 @@ st.markdown(
         background-color: transparent;
     }
 
+    [data-testid="stExpander"] [role="button"] {
+        font-size: 16px !important;
+        font-family: 'Source Sans Pro', sans-serif !important;
+    }
+
     .divider {
         border: none;
         border-top: 1px solid #e0e0e0;
@@ -855,9 +860,9 @@ with col_right:
             <div style="margin-bottom:12px; padding-left:10px;
                  border-left:3px solid {border_color};">
                 <div style="font-weight:bold; font-size:16px;
-                     color:#1a1a1a; font-family: inherit;">{event['speaker']}</div>
-                <div style="font-size:15px; color:#444;
-                     margin-top:4px; font-family: inherit;">{event['text']}</div>
+                     color:#1a1a1a; font-family: 'Source Sans Pro', sans-serif;">{event['speaker']}</div>
+                <div style="font-size:16px; color:#444;
+                     margin-top:4px; font-family: 'Source Sans Pro', sans-serif;">{event['text']}</div>
             </div>
             """
 
@@ -865,7 +870,7 @@ with col_right:
         <div style="height:250px; overflow-y:auto;
              padding:12px; background: transparent;
              border:1px solid #E0E0E0; border-radius:8px;
-             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+             font-family: 'Source Sans Pro', sans-serif; font-size:16px;">
         {transcript_items}
         <script>
         var container = document.currentScript.parentElement;
