@@ -730,8 +730,6 @@ col_avatar, col_right = st.columns([0.65, 0.35])
 
 # LEFT COLUMN: CREATIVE BRAIN INTERVENTION + AVATAR GRID
 with col_avatar:
-    st.markdown('<div class="section-header">🧠 Creative Brain</div>', unsafe_allow_html=True)
-
     current_event = None
     intervention = None
     if st.session_state.current_turn >= 0 and st.session_state.current_turn < len(events):
