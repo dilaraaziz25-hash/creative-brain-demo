@@ -845,36 +845,33 @@ with col_right:
     st.markdown('<div class="section-header">📝 Transcript</div>', unsafe_allow_html=True)
 
     if st.session_state.playing or st.session_state.display_turn > 0:
-        transcript_container = st.container()
-        with transcript_container:
-            start = max(0, st.session_state.display_turn - 4)
-            for idx in range(start, min(st.session_state.display_turn, len(events))):
-                event = events[idx]
-                intervention = event["intervention"]
-                speaker = event["speaker"]
+        start = max(0, st.session_state.display_turn - 4)
+        transcript_items = ""
+        for idx in range(start, min(st.session_state.display_turn, len(events))):
+            event = events[idx]
+            intervention = event["intervention"]
+            border_color = intervention["colour"] if intervention else "transparent"
+            transcript_items += f"""
+            <div style="margin-bottom:12px; padding-left:10px;
+                 border-left:3px solid {border_color};">
+                <div style="font-weight:bold; font-size:14px;
+                     color:#1a1a1a;">{event['speaker']}</div>
+                <div style="font-size:13px; color:#444;
+                     margin-top:4px;">{event['text']}</div>
+            </div>
+            """
 
-                border_color = intervention["colour"] if intervention else "transparent"
-                turn_html = f"""
-                <div class="transcript-turn {'with-intervention' if intervention else ''}"
-                     style="border-left-color: {border_color};">
-                    <span class="speaker-name">{speaker}</span>
-                    <div class="turn-text">{event['text']}</div>
-                </div>
-                """
-                st.markdown(turn_html, unsafe_allow_html=True)
-
-            # Auto-scroll to bottom
-            st.markdown(
-                """
-                <script>
-                var scrollArea = document.querySelector('div[data-testid="stVerticalBlock"]');
-                if (scrollArea) {
-                    scrollArea.scrollTop = scrollArea.scrollHeight;
-                }
-                </script>
-                """,
-                unsafe_allow_html=True,
-            )
+        st.components.v1.html(f"""
+        <div style="height:250px; overflow-y:auto;
+             padding:12px; background:#FAFAFA;
+             border:1px solid #E0E0E0; border-radius:8px;">
+        {transcript_items}
+        <script>
+        var container = document.currentScript.parentElement;
+        container.scrollTop = container.scrollHeight;
+        </script>
+        </div>
+        """, height=300)
 
     st.markdown("---")
     progress = min(st.session_state.display_turn / len(events), 1.0) if events else 0
