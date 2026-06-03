@@ -762,53 +762,49 @@ with col_right:
                 "intervention": intervention
             })
 
-        # Display brain icon and persona name on the same line
-        st.components.v1.html(f"""
-        <style>
-        @keyframes sparkle {{
-            0%   {{
-                filter: brightness(1) drop-shadow(0 0 8px rgba(100,180,255,0.9));
-                transform: scale(1);
+        # Two-column layout: brain icon + persona name on LEFT, expander on RIGHT
+        col1, col2 = st.columns([1, 3])
+
+        with col1:
+            # Brain icon with sparkle animation
+            st.components.v1.html(f"""
+            <style>
+            @keyframes sparkle {{
+                0%   {{
+                    filter: brightness(1) drop-shadow(0 0 8px rgba(100,180,255,0.9));
+                    transform: scale(1);
+                }}
+                50%  {{
+                    filter: brightness(1.6) drop-shadow(0 0 28px rgba(100,180,255,1.0)) drop-shadow(0 0 50px rgba(150,200,255,0.7));
+                    transform: scale(1.12);
+                }}
+                100% {{
+                    filter: brightness(1) drop-shadow(0 0 8px rgba(100,180,255,0.9));
+                    transform: scale(1);
+                }}
             }}
-            50%  {{
-                filter: brightness(1.6) drop-shadow(0 0 28px rgba(100,180,255,1.0)) drop-shadow(0 0 50px rgba(150,200,255,0.7));
-                transform: scale(1.12);
-            }}
-            100% {{
-                filter: brightness(1) drop-shadow(0 0 8px rgba(100,180,255,0.9));
-                transform: scale(1);
-            }}
-        }}
-        .row {{ display:flex; align-items:center; gap:12px; }}
-        .brain-icon {{ width:48px; height:48px; border-radius:50%;
-            animation: sparkle 1.2s ease-in-out infinite; }}
-        .persona-name {{ font-size:18px; font-weight:600;
-            color:{intervention['colour']}; font-family:sans-serif; }}
-        </style>
-        <div class="row">
+            .brain-icon {{ width:48px; height:48px; border-radius:50%;
+                animation: sparkle 1.2s ease-in-out infinite; }}
+            </style>
             <img src="data:image/png;base64,{icon_b64}" class="brain-icon">
-            <span class="persona-name">{intervention['persona']}</span>
-        </div>
-        """, height=70)
+            """, height=60)
 
-        # Display persona card without the name (now displayed inline above)
-        persona_html = f"""
-        <div class="persona-card" style="border-left-color: {intervention['colour']}; background-color: rgba({int(intervention['colour'][1:3], 16)}, {int(intervention['colour'][3:5], 16)}, {int(intervention['colour'][5:7], 16)}, 0.03); margin-top: 12px;">
-            <div class="persona-pattern">{intervention['pattern'].replace('_', ' ').upper()}</div>
-            <div class="persona-question">{intervention['question']}</div>
-        </div>
-        """
-        st.markdown(persona_html, unsafe_allow_html=True)
+            # Persona name in color
+            st.markdown(f"<div style='color: {intervention['colour']}; font-weight: 600; font-size: 16px;'>{intervention['persona']}</div>", unsafe_allow_html=True)
 
-        with st.expander("▾ Why the Brain asked this", expanded=False):
-            st.markdown(f"<div class='context-label'>💭 Context</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='expander-content'>{intervention['context']}</div>", unsafe_allow_html=True)
+            # Pattern label muted
+            st.markdown(f"<div style='color: #999; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05rem; font-weight: 600;'>{intervention['pattern'].replace('_', ' ')}</div>", unsafe_allow_html=True)
 
-            st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+        with col2:
+            # Question as expandable label with context inside
+            with st.expander(intervention['question'], expanded=False):
+                st.markdown(f"<div class='expander-content'>{intervention['context']}</div>", unsafe_allow_html=True)
 
-            persona_key = intervention.get("persona_key")
-            if persona_key:
-                get_persona_image_or_placeholder(persona_key, intervention['colour'])
+                st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+
+                persona_key = intervention.get("persona_key")
+                if persona_key:
+                    get_persona_image_or_placeholder(persona_key, intervention['colour'])
 
     else:
         # Display listening state with faded brain icon
