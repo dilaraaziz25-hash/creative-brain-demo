@@ -728,6 +728,30 @@ st.markdown("---")
 
 col_avatar, col_right = st.columns([0.65, 0.35])
 
+# Shared Speech Synthesis JavaScript
+st.components.v1.html("""
+<script>
+window.ttsState = { currentUtterance: null };
+
+function speak(text) {
+    if (window.ttsState.currentUtterance) {
+        window.speechSynthesis.cancel();
+        window.ttsState.currentUtterance = null;
+    } else {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        window.ttsState.currentUtterance = utterance;
+        window.speechSynthesis.speak(utterance);
+        utterance.onend = function() {
+            window.ttsState.currentUtterance = null;
+        };
+    }
+}
+</script>
+""", height=0)
+
 # LEFT COLUMN: CREATIVE BRAIN INTERVENTION + AVATAR GRID
 with col_avatar:
     current_event = None
@@ -783,6 +807,15 @@ with col_avatar:
 
         with col2:
             # Question as expandable label with context inside
+            question_text = intervention['question']
+            question_escaped = question_text.replace("'", "\\'").replace('"', '\\"')
+
+            st.components.v1.html(f"""
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <button onclick="speak('{question_escaped}')" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; margin: 0;" title="Read aloud">🔊</button>
+            </div>
+            """, height=30)
+
             with st.expander(intervention['question'], expanded=False):
                 st.markdown(f"<div class='expander-content'>{intervention['context']}</div>", unsafe_allow_html=True)
 
@@ -851,13 +884,18 @@ with col_right:
                 event = events[idx]
                 intervention = event["intervention"]
                 speaker = event["speaker"]
+                text = event['text']
+                text_escaped = text.replace("'", "\\'").replace('"', '\\"')
 
                 border_color = intervention["colour"] if intervention else "transparent"
                 turn_html = f"""
                 <div class="transcript-turn {'with-intervention' if intervention else ''}"
                      style="border-left-color: {border_color};">
-                    <span class="speaker-name">{speaker}</span>
-                    <div class="turn-text">{event['text']}</div>
+                    <div style="display: flex; align-items: flex-start; gap: 8px;">
+                        <span class="speaker-name">{speaker}</span>
+                        <button onclick="speak('{text_escaped}')" style="background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; margin: 0; flex-shrink: 0;" title="Read aloud">🔊</button>
+                    </div>
+                    <div class="turn-text">{text}</div>
                 </div>
                 """
                 st.markdown(turn_html, unsafe_allow_html=True)
