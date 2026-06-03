@@ -732,53 +732,36 @@ col_avatar, col_right = st.columns([0.65, 0.35])
 # Shared Speech Synthesis JavaScript
 st.components.v1.html("""
 <script>
-function speak(text) {
-    const synth = window.speechSynthesis;
+window.creativeBrainTTS = {
+    speak: function(text) {
+        if (!text || typeof text !== 'string') return;
+        const synth = window.speechSynthesis;
 
-    // Strip emojis and extra whitespace
-    text = (text || "").replace(/[\\p{Emoji_Presentation}\\p{Extended_Pictographic}]/gu, "").trim();
-    if (!text) return;
+        // Strip emojis and extra whitespace
+        text = text.replace(/[\\p{Emoji_Presentation}\\p{Extended_Pictographic}]/gu, "").trim();
+        if (!text) return;
 
-    // If something is speaking, stop it and replay
-    if (synth.speaking || synth.pending) {
-        synth.cancel();
-        setTimeout(() => {
+        // If something is speaking, stop it and replay
+        if (synth.speaking || synth.pending) {
+            synth.cancel();
+            setTimeout(() => {
+                const u = new SpeechSynthesisUtterance(text);
+                u.rate = 0.9;
+                u.pitch = 1;
+                u.volume = 1;
+                u.lang = "en-GB";
+                synth.speak(u);
+            }, 120);
+        } else {
             const u = new SpeechSynthesisUtterance(text);
             u.rate = 0.9;
             u.pitch = 1;
             u.volume = 1;
             u.lang = "en-GB";
             synth.speak(u);
-        }, 120);
-    } else {
-        const u = new SpeechSynthesisUtterance(text);
-        u.rate = 0.9;
-        u.pitch = 1;
-        u.volume = 1;
-        u.lang = "en-GB";
-        synth.speak(u);
+        }
     }
-}
-
-// Setup event listeners for TTS buttons
-document.addEventListener('DOMContentLoaded', () => {
-    document.addEventListener('click', (e) => {
-        if (e.target.dataset.ttsText !== undefined) {
-            speak(e.target.dataset.ttsText);
-        }
-    });
-});
-
-// Also handle dynamically added buttons (Streamlit reruns)
-const observer = new MutationObserver(() => {
-    document.addEventListener('click', (e) => {
-        if (e.target.dataset.ttsText !== undefined) {
-            speak(e.target.dataset.ttsText);
-        }
-    }, { once: true });
-});
-
-observer.observe(document.body, { childList: true, subtree: true });
+};
 </script>
 """, height=0)
 
@@ -838,11 +821,11 @@ with col_avatar:
         with col2:
             # Question as expandable label with context inside
             question_text = intervention['question']
-            question_json = json.dumps(question_text)
+            question_js = json.dumps(question_text)
 
             st.components.v1.html(f"""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <button data-tts-text='{question_json}' style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; margin: 0;" title="Read aloud">🔊</button>
+                <button onclick="window.creativeBrainTTS.speak({question_js})" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; margin: 0;" title="Read aloud">🔊</button>
             </div>
             """, height=30)
 
@@ -915,7 +898,7 @@ with col_right:
                 intervention = event["intervention"]
                 speaker = event["speaker"]
                 text = event['text']
-                text_json = json.dumps(text)
+                text_js = json.dumps(text)
 
                 border_color = intervention["colour"] if intervention else "transparent"
                 turn_html = f"""
@@ -923,7 +906,7 @@ with col_right:
                      style="border-left-color: {border_color};">
                     <div style="display: flex; align-items: flex-start; gap: 8px;">
                         <span class="speaker-name">{speaker}</span>
-                        <button data-tts-text='{text_json}' style="background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; margin: 0; flex-shrink: 0;" title="Read aloud">🔊</button>
+                        <button onclick="window.creativeBrainTTS.speak({text_js})" style="background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; margin: 0; flex-shrink: 0;" title="Read aloud">🔊</button>
                     </div>
                     <div class="turn-text">{text}</div>
                 </div>
