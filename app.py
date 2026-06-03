@@ -404,39 +404,35 @@ def play_intervention_chime():
     chime_html = f"""
     <script>
     (function() {{
-        // Create a completely fresh AudioContext instance for this chime
-        const freshAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // Digital glitch sound - three descending beeps
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-        // First tone: 1000 Hz
-        const oscillator1 = freshAudioContext.createOscillator();
-        const gainNode1 = freshAudioContext.createGain();
-        oscillator1.connect(gainNode1);
-        gainNode1.connect(freshAudioContext.destination);
+        function playBeep(frequency, startTime, duration) {{
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
 
-        oscillator1.frequency.value = 1000;
-        oscillator1.type = 'sine';
-        gainNode1.gain.setValueAtTime(0.15, freshAudioContext.currentTime);
-        gainNode1.gain.exponentialRampToValueAtTime(0.01, freshAudioContext.currentTime + 0.15);
-        oscillator1.start(freshAudioContext.currentTime);
-        oscillator1.stop(freshAudioContext.currentTime + 0.15);
+            osc.type = 'square';
+            osc.frequency.value = frequency;
 
-        // Second tone: 1500 Hz
-        const oscillator2 = freshAudioContext.createOscillator();
-        const gainNode2 = freshAudioContext.createGain();
-        oscillator2.connect(gainNode2);
-        gainNode2.connect(freshAudioContext.destination);
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.15, startTime + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
-        oscillator2.frequency.value = 1500;
-        oscillator2.type = 'sine';
-        gainNode2.gain.setValueAtTime(0.15, freshAudioContext.currentTime + 0.2);
-        gainNode2.gain.exponentialRampToValueAtTime(0.01, freshAudioContext.currentTime + 0.35);
-        oscillator2.start(freshAudioContext.currentTime + 0.2);
-        oscillator2.stop(freshAudioContext.currentTime + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
 
-        // Resume audio context if suspended (common in browsers)
-        if (freshAudioContext.state === 'suspended') {{
-            freshAudioContext.resume();
+            osc.start(startTime);
+            osc.stop(startTime + duration);
         }}
+
+        if (ctx.state === 'suspended') {{
+            ctx.resume();
+        }}
+
+        const now = ctx.currentTime;
+        playBeep(880, now, 0.08);
+        playBeep(660, now + 0.1, 0.08);
+        playBeep(440, now + 0.2, 0.08);
     }})();
     // Unique ID: {unique_id}
     </script>
