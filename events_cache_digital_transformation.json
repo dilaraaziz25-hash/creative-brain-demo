@@ -28,8 +28,8 @@
         "persona_key": "challenger",
         "colour": "#7F77DD",
         "pattern": "assumption_unchallenged",
-        "question": "Why are you treating a digital transformation like a furniture rearrangement when your competitors are rebuilding the house from scratch?",
-        "context": "This team is defaulting to 'lift and shift' \u2014 the laziest possible interpretation of transformation \u2014 because it worked once on a warehouse system. The radical alternative they're sleepwalking past is using this moment to fundamentally re-architect how the business operates, not just move the same broken processes to shinier infrastructure."
+        "question": "You're treating a company-wide ERP rollout as if it's identical to migrating a warehouse system. How might we honestly assess what's actually different this time before we vote to replicate an approach that may not fit?",
+        "context": "The team is confusing familiarity with fit \u2014 the assumption that 'we've done migrations before' means this migration carries the same complexity, risk profile, and stakeholder impact is doing a lot of unexamined work here."
       }
     },
     {
@@ -65,8 +65,8 @@
         "persona_key": "pressure_tester",
         "colour": "#D85A30",
         "pattern": "risk_glossed_over",
-        "question": "If lift-and-shift fails at month two because the ERP's custom configurations don't survive the migration, who in this room is prepared to tell the client they traded technical integrity for the appearance of momentum?",
-        "context": "The team is conflating 'showing progress' with 'making the right call' \u2014 and nobody has actually challenged whether those two things are the same here. Lisa's change management flag and Marcus's complexity concern are being steamrolled by social pressure, not logic; facing this now means the team either justifies the decision with evidence or admits they're moving fast to feel good, not because the approach is sound."
+        "question": "We're about to commit to a migration approach for a 400-person ERP rollout without resolving whether lift-and-shift is the right fit \u2014 and we haven't addressed training or change management at all. How might we take 30 minutes now to pressure-test the approach before we lock it in, so we're not course-correcting under even more pressure later?",
+        "context": "The risk is that 'showing progress' becomes forward motion on a plan that hasn't been validated for this level of complexity \u2014 Marcus and Lisa have both raised legitimate flags that haven't been answered, just set aside. Facing these questions now, while we still have room to adjust, is actually the fastest path to real progress."
       }
     },
     {
@@ -90,8 +90,8 @@
         "persona_key": "integrator",
         "colour": "#2BAFB3",
         "pattern": "delivery_gap",
-        "question": "Are we embedding change management and training into the core delivery architecture right now, or are we designing a system that 400 people will resist on day one?",
-        "context": "The team is deferring the people side to 'implementation phase' while simultaneously trying to contain budget risk with a flat contingency \u2014 these two decisions are in direct conflict, because underfunded change management is the single most common driver of ERP cost overruns. Locking in a change and training model now, with its own budget line and ownership, would actually shrink the overrun risk Priya is worried about rather than just absorbing it."
+        "question": "How might we design a change management and budget resilience strategy that's embedded into the implementation plan from day one, so the 400-person rollout lands successfully without surprise cost exposure?",
+        "context": "There are two adjacent delivery gaps here \u2014 people adoption and budget predictability \u2014 that are easier and cheaper to design for now than to retrofit mid-implementation. Addressing both upfront turns them from risks into strengths of the plan."
       }
     },
     {
@@ -121,8 +121,8 @@
         "persona_key": "challenger",
         "colour": "#7F77DD",
         "pattern": "assumption_unchallenged",
-        "question": "Who told you 'what everyone does' was a strategy and not just a way to avoid thinking?",
-        "context": "The team is defaulting to lift-and-shift with the same vendor and a cargo-culted 20% contingency \u2014 nobody has questioned whether migrating to the same architecture in the cloud is worth doing at all. The radical alternative they're sleepwalking past is using this migration as the forcing function to re-architect, switch vendors, or challenge whether the workload should even exist."
+        "question": "'Everyone does it' is how teams get burned by the same predictable disasters \u2014 lift-and-shift to the same vendor means you're inheriting all your current constraints plus new cloud ones. How might we pressure-test whether 20% actually covers the risk profile of *this* migration, not a generic one?",
+        "context": "The team is treating 'standard practice' as a substitute for actual risk analysis. The assumption that sameness equals safety needs to be named before it gets baked into the plan."
       }
     },
     {
@@ -134,8 +134,8 @@
         "persona_key": "pressure_tester",
         "colour": "#D85A30",
         "pattern": "risk_glossed_over",
-        "question": "Lisa, what specifically breaks without a change management plan, and why did you let three words and a pause bury it?",
-        "context": "A dissenting voice just capitulated under social pressure without the objection being resolved \u2014 it was silenced, not answered. If the migration hits adoption failure or operational resistance in week six, the autopsy will show this exact moment where the team knew and chose comfort over clarity."
+        "question": "Lisa just said 'but... okay' \u2014 which usually means someone important isn't actually okay. How might we give her two minutes to say what she's really thinking?",
+        "context": "A dissenting voice going quiet at the decision moment is often where project risk hides. Hearing Lisa out now costs almost nothing, while missing a real concern about change management could cost everything downstream."
       }
     }
   ]
