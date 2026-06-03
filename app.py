@@ -822,26 +822,6 @@ with col_avatar:
         </div>
         """, height=140)
 
-    # INTERVENTION HISTORY (COMPACT) - Display independently from current intervention
-    # Always show if there's history, regardless of whether a current intervention is showing
-    if st.session_state.intervention_history:
-        st.markdown('<div class="intervention-history-header">Previous nudges</div>', unsafe_allow_html=True)
-
-        # Display in reverse order (most recent first)
-        for item in reversed(st.session_state.intervention_history):
-            intervention_data = item["intervention"]
-            persona_name = intervention_data["persona"]
-            colour = intervention_data["colour"]
-
-            # Use Unicode filled circle with colour styling
-            label = f"● {persona_name} · Turn {item['turn_number']}"
-
-            with st.expander(label, expanded=False):
-                # Add colour to the circle using markdown
-                st.markdown(f"<span style='color: {colour};'>●</span> **{persona_name}**", unsafe_allow_html=True)
-                st.markdown(f"<div class='history-question'>{intervention_data['question']}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='history-context'><strong>Context:</strong> {intervention_data['context']}</div>", unsafe_allow_html=True)
-
     # AVATAR GRID - Below intervention card
     st.markdown('<div class="section-header">👥 In this meeting</div>', unsafe_allow_html=True)
 
@@ -886,6 +866,26 @@ with col_right:
         </script>
         </div>
         """, height=300)
+
+    # INTERVENTION HISTORY (COMPACT) - Display independently from current intervention
+    # Always show if there's history, regardless of whether a current intervention is showing
+    if st.session_state.intervention_history:
+        st.markdown('<div class="intervention-history-header">Previous nudges</div>', unsafe_allow_html=True)
+
+        # Display in reverse order (most recent first)
+        for item in reversed(st.session_state.intervention_history):
+            intervention_data = item["intervention"]
+            persona_name = intervention_data["persona"]
+            colour = intervention_data["colour"]
+
+            # Use Unicode filled circle with colour styling
+            label = f"● {persona_name} · Turn {item['turn_number']}"
+
+            with st.expander(label, expanded=False):
+                # Add colour to the circle using markdown
+                st.markdown(f"<span style='color: {colour};'>●</span> **{persona_name}**", unsafe_allow_html=True)
+                st.markdown(f"<div class='history-question'>{intervention_data['question']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='history-context'><strong>Context:</strong> {intervention_data['context']}</div>", unsafe_allow_html=True)
 
     st.markdown("---")
     progress = min(st.session_state.display_turn / len(events), 1.0) if events else 0
