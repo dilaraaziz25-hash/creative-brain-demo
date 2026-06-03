@@ -728,20 +728,8 @@ st.markdown("---")
 
 col_avatar, col_right = st.columns([0.65, 0.35])
 
-# LEFT COLUMN: AVATAR GRID ONLY
+# LEFT COLUMN: CREATIVE BRAIN INTERVENTION + AVATAR GRID
 with col_avatar:
-    st.markdown('<div class="section-header">👥 In this meeting</div>', unsafe_allow_html=True)
-
-    participants = parse_participants(str(current_transcript_path))
-
-    current_speaker = ""
-    if st.session_state.current_turn >= 0 and st.session_state.current_turn < len(events):
-        current_speaker = events[st.session_state.current_turn]["speaker"]
-
-    render_avatar_grid(participants, current_speaker, PARTICIPANT_TILE_COLOURS)
-
-# RIGHT COLUMN: CREATIVE BRAIN PANEL + TRANSCRIPT
-with col_right:
     st.markdown('<div class="section-header">🧠 Creative Brain</div>', unsafe_allow_html=True)
 
     current_event = None
@@ -843,8 +831,19 @@ with col_right:
                 st.markdown(f"<div class='history-question'>{intervention_data['question']}</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='history-context'><strong>Context:</strong> {intervention_data['context']}</div>", unsafe_allow_html=True)
 
-    # BOTTOM: LIVE TRANSCRIPT
-    st.markdown("---")
+    # AVATAR GRID - Below intervention card
+    st.markdown('<div class="section-header">👥 In this meeting</div>', unsafe_allow_html=True)
+
+    participants = parse_participants(str(current_transcript_path))
+
+    current_speaker = ""
+    if st.session_state.current_turn >= 0 and st.session_state.current_turn < len(events):
+        current_speaker = events[st.session_state.current_turn]["speaker"]
+
+    render_avatar_grid(participants, current_speaker, PARTICIPANT_TILE_COLOURS)
+
+# RIGHT COLUMN: LIVE TRANSCRIPT
+with col_right:
     st.markdown('<div class="section-header">📝 Transcript</div>', unsafe_allow_html=True)
 
     if st.session_state.playing or st.session_state.display_turn > 0:
