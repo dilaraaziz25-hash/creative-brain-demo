@@ -2,6 +2,7 @@ import streamlit as st
 import time
 import re
 import os
+import json
 import base64
 from pathlib import Path
 from engine import run_demo, get_transcript_hash, load_cache
@@ -758,6 +759,26 @@ function speak(text) {
         synth.speak(u);
     }
 }
+
+// Setup event listeners for TTS buttons
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('click', (e) => {
+        if (e.target.dataset.ttsText !== undefined) {
+            speak(e.target.dataset.ttsText);
+        }
+    });
+});
+
+// Also handle dynamically added buttons (Streamlit reruns)
+const observer = new MutationObserver(() => {
+    document.addEventListener('click', (e) => {
+        if (e.target.dataset.ttsText !== undefined) {
+            speak(e.target.dataset.ttsText);
+        }
+    }, { once: true });
+});
+
+observer.observe(document.body, { childList: true, subtree: true });
 </script>
 """, height=0)
 
@@ -817,11 +838,11 @@ with col_avatar:
         with col2:
             # Question as expandable label with context inside
             question_text = intervention['question']
-            question_escaped = question_text.replace("'", "\\'").replace('"', '\\"')
+            question_json = json.dumps(question_text)
 
             st.components.v1.html(f"""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <button onclick="speak('{question_escaped}')" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; margin: 0;" title="Read aloud">🔊</button>
+                <button data-tts-text='{question_json}' style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; margin: 0;" title="Read aloud">🔊</button>
             </div>
             """, height=30)
 
@@ -894,7 +915,7 @@ with col_right:
                 intervention = event["intervention"]
                 speaker = event["speaker"]
                 text = event['text']
-                text_escaped = text.replace("'", "\\'").replace('"', '\\"')
+                text_json = json.dumps(text)
 
                 border_color = intervention["colour"] if intervention else "transparent"
                 turn_html = f"""
@@ -902,7 +923,7 @@ with col_right:
                      style="border-left-color: {border_color};">
                     <div style="display: flex; align-items: flex-start; gap: 8px;">
                         <span class="speaker-name">{speaker}</span>
-                        <button onclick="speak('{text_escaped}')" style="background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; margin: 0; flex-shrink: 0;" title="Read aloud">🔊</button>
+                        <button data-tts-text='{text_json}' style="background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; margin: 0; flex-shrink: 0;" title="Read aloud">🔊</button>
                     </div>
                     <div class="turn-text">{text}</div>
                 </div>
