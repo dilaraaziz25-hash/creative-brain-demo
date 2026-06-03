@@ -861,7 +861,7 @@ with col_right:
                  border-left:3px solid {border_color};">
                 <div style="font-weight:bold; font-size:16px;
                      color:#1a1a1a; font-family: 'Source Sans Pro', sans-serif;">{event['speaker']}</div>
-                <div style="font-size:16px; color:#444;
+                <div style="font-size:14px; color:#444;
                      margin-top:4px; font-family: 'Source Sans Pro', sans-serif;">{event['text']}</div>
             </div>
             """
