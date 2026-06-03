@@ -9,19 +9,6 @@ from personas import PERSONAS
 
 st.set_page_config(layout="wide", page_title="The Creative Brain")
 
-# Global text-to-speech function
-st.components.v1.html("""
-<script>
-function speak(text) {
-    window.speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.9;
-    u.lang = 'en-GB';
-    window.speechSynthesis.speak(u);
-}
-</script>
-""", height=0)
-
 # Load brain icon as base64
 icon_path = os.path.join(os.path.dirname(__file__), "brain_icon.png")
 with open(icon_path, "rb") as f:
@@ -796,12 +783,6 @@ with col_avatar:
 
         with col2:
             # Question as expandable label with context inside
-            question_text = intervention['question']
-            # Add TTS button next to question
-            st.components.v1.html(f"""
-            <button onclick="speak('{question_text.replace("'", "\\'")}')" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; margin: 0; margin-bottom: 8px;" title="Read aloud">🔊</button>
-            """, height=30)
-
             with st.expander(intervention['question'], expanded=False):
                 st.markdown(f"<div class='expander-content'>{intervention['context']}</div>", unsafe_allow_html=True)
 
@@ -866,7 +847,8 @@ with col_right:
     if st.session_state.playing or st.session_state.display_turn > 0:
         transcript_container = st.container()
         with transcript_container:
-            for idx in range(min(st.session_state.display_turn, len(events))):
+            start = max(0, st.session_state.display_turn - 4)
+            for idx in range(start, min(st.session_state.display_turn, len(events))):
                 event = events[idx]
                 intervention = event["intervention"]
                 speaker = event["speaker"]
