@@ -731,22 +731,31 @@ col_avatar, col_right = st.columns([0.65, 0.35])
 # Shared Speech Synthesis JavaScript
 st.components.v1.html("""
 <script>
-window.ttsState = { currentUtterance: null };
-
 function speak(text) {
-    if (window.ttsState.currentUtterance) {
-        window.speechSynthesis.cancel();
-        window.ttsState.currentUtterance = null;
+    const synth = window.speechSynthesis;
+
+    // Strip emojis and extra whitespace
+    text = (text || "").replace(/[\\p{Emoji_Presentation}\\p{Extended_Pictographic}]/gu, "").trim();
+    if (!text) return;
+
+    // If something is speaking, stop it and replay
+    if (synth.speaking || synth.pending) {
+        synth.cancel();
+        setTimeout(() => {
+            const u = new SpeechSynthesisUtterance(text);
+            u.rate = 0.9;
+            u.pitch = 1;
+            u.volume = 1;
+            u.lang = "en-GB";
+            synth.speak(u);
+        }, 120);
     } else {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-        window.ttsState.currentUtterance = utterance;
-        window.speechSynthesis.speak(utterance);
-        utterance.onend = function() {
-            window.ttsState.currentUtterance = null;
-        };
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.9;
+        u.pitch = 1;
+        u.volume = 1;
+        u.lang = "en-GB";
+        synth.speak(u);
     }
 }
 </script>
