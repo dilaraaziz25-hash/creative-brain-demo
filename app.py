@@ -283,7 +283,8 @@ st.markdown(
         background-color: transparent;
     }
 
-    [data-testid="stExpander"] [role="button"] {
+    /* Persona question expander - not in intervention history */
+    [data-testid="stVerticalBlock"] > [data-testid="stExpander"] [role="button"] {
         font-size: 18px !important;
         font-family: 'Source Sans Pro', sans-serif !important;
         background-color: #F5F5F5 !important;
@@ -291,15 +292,8 @@ st.markdown(
         padding: 12px !important;
     }
 
-    [data-testid="stExpander"] [role="button"]:hover {
+    [data-testid="stVerticalBlock"] > [data-testid="stExpander"] [role="button"]:hover {
         background-color: #EFEFEF !important;
-    }
-
-    [data-testid="stExpander"] > div:nth-child(2) {
-        background-color: #FAFAFA !important;
-        border-radius: 6px !important;
-        padding: 12px !important;
-        margin-top: 8px !important;
     }
 
     .divider {

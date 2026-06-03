@@ -1,0 +1,204 @@
+{
+  "transcript_hash": "9589502e587826106bbc815d0db6265d",
+  "events": [
+    {
+      "turn_index": 0,
+      "speaker": "James",
+      "text": "Right, let's lock down the Q3 roadmap. We've got three big items competing for bandwidth \u2014 the mobile app redesign, the API integrations, and the analytics dashboard. I think we lead with the mobile redesign. It's been on the list for two years and customers keep asking for it.",
+      "intervention": null
+    },
+    {
+      "turn_index": 1,
+      "speaker": "Nina",
+      "text": "Engineering is aligned on mobile. We know the codebase well, the team is familiar with it. It's lower risk than the API work.",
+      "intervention": null
+    },
+    {
+      "turn_index": 2,
+      "speaker": "Raj",
+      "text": "Agreed. Mobile has the most Jira tickets from customers. That's a clear signal.",
+      "intervention": null
+    },
+    {
+      "turn_index": 3,
+      "speaker": "Clara",
+      "text": "From UX perspective, mobile is definitely overdue. I've got six months of research ready to go.",
+      "intervention": {
+        "persona": "Anchor Your Ambitions",
+        "persona_key": "anchor",
+        "colour": "#1D9E75",
+        "pattern": "scope_too_safe",
+        "question": "How might we use the mobile redesign as a launchpad to unlock a broader platform experience that could open entirely new revenue streams or customer segments?",
+        "context": "There's real energy and alignment in the room around mobile \u2014 six months of research, engineering confidence, and clear customer demand all pointing the same direction. That's a strong foundation, and it makes me curious whether we're thinking about what this redesign could enable beyond fixing what's overdue."
+      }
+    },
+    {
+      "turn_index": 4,
+      "speaker": "James",
+      "text": "Perfect, so mobile first. We can push API integrations to Q4 and the dashboard to next year.",
+      "intervention": null
+    },
+    {
+      "turn_index": 5,
+      "speaker": "Ben",
+      "text": "Hold on \u2014 I need to flag something. Three of our top enterprise prospects specifically asked about the API integrations last week. Two of them said it's a blocker for signing.",
+      "intervention": {
+        "persona": "Find Unexpected Examples",
+        "persona_key": "benchmarker",
+        "colour": "#378ADD",
+        "pattern": "missing_external_evidence",
+        "question": "How might we learn from the way infrastructure industries like railways or aviation have historically sequenced 'consumer experience' upgrades versus 'operator integration' systems when both were simultaneously blocking growth?",
+        "context": "There's fascinating precedent in industries where the end-user interface and the B2B integration layer were competing for the same resources \u2014 how they resolved sequencing often determined which customer segment they ultimately became. The pattern might reveal something surprising about what 'first' actually means when two blockers serve fundamentally different revenue trajectories."
+      }
+    },
+    {
+      "turn_index": 6,
+      "speaker": "James",
+      "text": "Sales always says everything is urgent, Ben. We can't let individual deals drive the roadmap.",
+      "intervention": null
+    },
+    {
+      "turn_index": 7,
+      "speaker": "Ben",
+      "text": "These aren't small deals. We're talking about \u00a32M combined. But if the team thinks mobile is the priority...",
+      "intervention": null
+    },
+    {
+      "turn_index": 8,
+      "speaker": "Raj",
+      "text": "The data supports mobile. It's not just one or two customers.",
+      "intervention": null
+    },
+    {
+      "turn_index": 9,
+      "speaker": "Nina",
+      "text": "And we'd be context-switching the team if we pivot to APIs now. That's expensive.",
+      "intervention": null
+    },
+    {
+      "turn_index": 10,
+      "speaker": "Clara",
+      "text": "Mobile research is already done. Starting APIs from scratch would set us back months.",
+      "intervention": null
+    },
+    {
+      "turn_index": 11,
+      "speaker": "James",
+      "text": "So we're agreed \u2014 mobile first, APIs in Q4. Ben, you can tell prospects Q4 for the API work.",
+      "intervention": null
+    },
+    {
+      "turn_index": 12,
+      "speaker": "Ben",
+      "text": "I mean... okay. I just want it on record that we might lose those deals.",
+      "intervention": {
+        "persona": "Challenge Assumptions",
+        "persona_key": "challenger",
+        "colour": "#7F77DD",
+        "pattern": "assumption_unchallenged",
+        "question": "You're treating 'months of setback' as a fixed cost when you haven't actually scoped the API work yet. How might we find out what it would genuinely take before Ben walks into those sales calls?",
+        "context": "The team locked in a Q4 commitment based on an assumption about effort, not an estimate \u2014 and then handed Ben the consequences. That's worth thirty minutes before it's worth losing the deals."
+      }
+    },
+    {
+      "turn_index": 13,
+      "speaker": "James",
+      "text": "Noted. Let's move on to resourcing.",
+      "intervention": {
+        "persona": "Surface Hidden Risks",
+        "persona_key": "pressure_tester",
+        "colour": "#D85A30",
+        "pattern": "risk_glossed_over",
+        "question": "Ben just flagged that this decision might cost us real deals, and the team moved past it in about ten seconds. How might we spend five minutes actually quantifying what's at risk before we lock this in?",
+        "context": "The risk isn't just 'on the record' \u2014 it's unresolved, and Ben may be carrying the weight of delivering news to prospects that this room hasn't fully owned. Naming the number now means the mobile-first choice becomes a conscious tradeoff rather than something we quietly regret in Q3."
+      }
+    },
+    {
+      "turn_index": 14,
+      "speaker": "Nina",
+      "text": "I think we should also confirm we're not touching the analytics dashboard until next year. It's the most complex piece.",
+      "intervention": null
+    },
+    {
+      "turn_index": 15,
+      "speaker": "Raj",
+      "text": "Agreed, dashboard can wait. Customers aren't screaming for it.",
+      "intervention": null
+    },
+    {
+      "turn_index": 16,
+      "speaker": "James",
+      "text": "Good. Mobile, then APIs, then dashboard. That's the roadmap.",
+      "intervention": {
+        "persona": "Anchor Your Ambitions",
+        "persona_key": "anchor",
+        "colour": "#1D9E75",
+        "pattern": "scope_too_safe",
+        "question": "How might we use the analytics dashboard \u2014 even in a lightweight form \u2014 as a competitive differentiator that customers would actively pay more for?",
+        "context": "The team has made a sensible, pragmatic call to defer the dashboard, and that discipline is really valuable. It's worth a quick moment to ask whether 'customers aren't screaming for it' might be different from 'customers would love us for it' \u2014 sometimes the biggest opportunities are in the things people haven't yet thought to ask for."
+      }
+    },
+    {
+      "turn_index": 17,
+      "speaker": "Ben",
+      "text": "What about the performance issues we've been seeing? Three enterprise clients flagged slow load times last month.",
+      "intervention": {
+        "persona": "Run a Quick Experiment",
+        "persona_key": "experimenter",
+        "colour": "#EF9F27",
+        "pattern": "analysis_paralysis",
+        "question": "How might we run a quick load test with just those three enterprise clients' data profiles to pinpoint exactly where the slowdown is happening?",
+        "context": "A targeted spike test could tell us in a day or two whether this is a fixable quick win or a deeper architectural issue that needs roadmap space. Better to know now than get surprised mid-rollout!"
+      }
+    },
+    {
+      "turn_index": 18,
+      "speaker": "James",
+      "text": "That's an engineering maintenance thing, not a roadmap item.",
+      "intervention": null
+    },
+    {
+      "turn_index": 19,
+      "speaker": "Nina",
+      "text": "We can handle that in sprints alongside the mobile work.",
+      "intervention": null
+    },
+    {
+      "turn_index": 20,
+      "speaker": "Ben",
+      "text": "Okay. I just hope we're not building a beautiful new mobile app that runs slowly.",
+      "intervention": null
+    },
+    {
+      "turn_index": 21,
+      "speaker": "James",
+      "text": "We'll handle it. Are we done?",
+      "intervention": {
+        "persona": "Surface Hidden Risks",
+        "persona_key": "pressure_tester",
+        "colour": "#D85A30",
+        "pattern": "risk_glossed_over",
+        "question": "Ben just named a real fear \u2014 that we ship a beautiful product that performs poorly \u2014 and it got absorbed without actually being resolved. How might we get specific right now about what 'we'll handle it' actually means?",
+        "context": "The risk is that performance work gets perpetually deprioritized once sprint pressure kicks in, leaving the mobile experience compromised at launch. Naming a concrete owner, timeline, and success metric here would turn a hope into a plan."
+      }
+    },
+    {
+      "turn_index": 22,
+      "speaker": "Raj",
+      "text": "I think so.",
+      "intervention": null
+    },
+    {
+      "turn_index": 23,
+      "speaker": "Clara",
+      "text": "Yes.",
+      "intervention": null
+    },
+    {
+      "turn_index": 24,
+      "speaker": "Ben",
+      "text": "Sure.",
+      "intervention": null
+    }
+  ]
+}
