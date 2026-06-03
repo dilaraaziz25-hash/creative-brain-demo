@@ -108,13 +108,20 @@ def dispatch_persona(pattern: str, chunk: list[dict]) -> dict:
         )
         response_text = message.content[0].text.strip()
 
+        # Remove markdown code blocks if present
+        if response_text.startswith("```"):
+            response_text = response_text.split("```")[1]
+            if response_text.startswith("json"):
+                response_text = response_text[4:]
+            response_text = response_text.strip()
+
         try:
             parsed = json.loads(response_text)
             question = parsed.get("question", "")
             context = parsed.get("context", "")
         except json.JSONDecodeError:
-            question = ""
-            context = response_text
+            question = response_text
+            context = ""
 
         return {
             "persona": persona["name"],
