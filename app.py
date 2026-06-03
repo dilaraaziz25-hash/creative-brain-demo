@@ -729,41 +729,42 @@ st.markdown("---")
 
 col_avatar, col_right = st.columns([0.65, 0.35])
 
-# Shared Speech Synthesis JavaScript
-st.components.v1.html("""
-<script>
-window.creativeBrainTTS = {
-    speak: function(text) {
+# Create shared TTS component with function that will be included in button components
+def make_tts_component_html(button_html_content=""):
+    """Helper to include speak function with button HTML"""
+    return f"""
+    <script>
+    function speak(text) {{
         if (!text || typeof text !== 'string') return;
         const synth = window.speechSynthesis;
 
         // Strip emojis and extra whitespace
-        text = text.replace(/[\\p{Emoji_Presentation}\\p{Extended_Pictographic}]/gu, "").trim();
+        text = text.replace(/[\\p{{Emoji_Presentation}}\\p{{Extended_Pictographic}}]/gu, "").trim();
         if (!text) return;
 
         // If something is speaking, stop it and replay
-        if (synth.speaking || synth.pending) {
+        if (synth.speaking || synth.pending) {{
             synth.cancel();
-            setTimeout(() => {
+            setTimeout(() => {{
                 const u = new SpeechSynthesisUtterance(text);
                 u.rate = 0.9;
                 u.pitch = 1;
                 u.volume = 1;
                 u.lang = "en-GB";
                 synth.speak(u);
-            }, 120);
-        } else {
+            }}, 120);
+        }} else {{
             const u = new SpeechSynthesisUtterance(text);
             u.rate = 0.9;
             u.pitch = 1;
             u.volume = 1;
             u.lang = "en-GB";
             synth.speak(u);
-        }
-    }
-};
-</script>
-""", height=0)
+        }}
+    }}
+    </script>
+    {button_html_content}
+    """
 
 # LEFT COLUMN: CREATIVE BRAIN INTERVENTION + AVATAR GRID
 with col_avatar:
@@ -823,11 +824,12 @@ with col_avatar:
             question_text = intervention['question']
             question_js = json.dumps(question_text)
 
-            st.components.v1.html(f"""
+            button_html = f"""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <button onclick="window.creativeBrainTTS.speak({question_js})" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; margin: 0;" title="Read aloud">🔊</button>
+                <button onclick="speak({question_js})" style="background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; margin: 0;" title="Read aloud">🔊</button>
             </div>
-            """, height=30)
+            """
+            st.components.v1.html(make_tts_component_html(button_html), height=30)
 
             with st.expander(intervention['question'], expanded=False):
                 st.markdown(f"<div class='expander-content'>{intervention['context']}</div>", unsafe_allow_html=True)
@@ -891,40 +893,42 @@ with col_right:
     st.markdown('<div class="section-header">📝 Transcript</div>', unsafe_allow_html=True)
 
     if st.session_state.playing or st.session_state.display_turn > 0:
-        transcript_container = st.container()
-        with transcript_container:
-            for idx in range(min(st.session_state.display_turn, len(events))):
-                event = events[idx]
-                intervention = event["intervention"]
-                speaker = event["speaker"]
-                text = event['text']
-                text_js = json.dumps(text)
+        # Build all transcript turns with TTS buttons in a single component
+        transcript_html = ""
+        for idx in range(min(st.session_state.display_turn, len(events))):
+            event = events[idx]
+            intervention = event["intervention"]
+            speaker = event["speaker"]
+            text = event['text']
+            text_js = json.dumps(text)
 
-                border_color = intervention["colour"] if intervention else "transparent"
-                turn_html = f"""
-                <div class="transcript-turn {'with-intervention' if intervention else ''}"
-                     style="border-left-color: {border_color};">
-                    <div style="display: flex; align-items: flex-start; gap: 8px;">
-                        <span class="speaker-name">{speaker}</span>
-                        <button onclick="window.creativeBrainTTS.speak({text_js})" style="background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; margin: 0; flex-shrink: 0;" title="Read aloud">🔊</button>
-                    </div>
-                    <div class="turn-text">{text}</div>
+            border_color = intervention["colour"] if intervention else "transparent"
+            transcript_html += f"""
+            <div class="transcript-turn {'with-intervention' if intervention else ''}"
+                 style="border-left-color: {border_color};">
+                <div style="display: flex; align-items: flex-start; gap: 8px;">
+                    <span class="speaker-name">{speaker}</span>
+                    <button onclick="speak({text_js})" style="background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; margin: 0; flex-shrink: 0;" title="Read aloud">🔊</button>
                 </div>
-                """
-                st.markdown(turn_html, unsafe_allow_html=True)
+                <div class="turn-text">{text}</div>
+            </div>
+            """
 
-            # Auto-scroll to bottom
-            st.markdown(
-                """
-                <script>
-                var scrollArea = document.querySelector('div[data-testid="stVerticalBlock"]');
-                if (scrollArea) {
-                    scrollArea.scrollTop = scrollArea.scrollHeight;
-                }
-                </script>
-                """,
-                unsafe_allow_html=True,
-            )
+        # Render all transcript turns with TTS function in single component
+        st.components.v1.html(make_tts_component_html(transcript_html), height=400)
+
+        # Auto-scroll to bottom
+        st.markdown(
+            """
+            <script>
+            var scrollArea = document.querySelector('div[data-testid="stVerticalBlock"]');
+            if (scrollArea) {
+                scrollArea.scrollTop = scrollArea.scrollHeight;
+            }
+            </script>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.markdown("---")
     progress = min(st.session_state.display_turn / len(events), 1.0) if events else 0
