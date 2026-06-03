@@ -855,16 +855,17 @@ with col_right:
             <div style="margin-bottom:12px; padding-left:10px;
                  border-left:3px solid {border_color};">
                 <div style="font-weight:bold; font-size:16px;
-                     color:#1a1a1a;">{event['speaker']}</div>
+                     color:#1a1a1a; font-family: inherit;">{event['speaker']}</div>
                 <div style="font-size:15px; color:#444;
-                     margin-top:4px;">{event['text']}</div>
+                     margin-top:4px; font-family: inherit;">{event['text']}</div>
             </div>
             """
 
         st.components.v1.html(f"""
         <div style="height:250px; overflow-y:auto;
-             padding:12px; background:#EBEBEB;
-             border:1px solid #E0E0E0; border-radius:8px;">
+             padding:12px; background: transparent;
+             border:1px solid #E0E0E0; border-radius:8px;
+             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
         {transcript_items}
         <script>
         var container = document.currentScript.parentElement;
