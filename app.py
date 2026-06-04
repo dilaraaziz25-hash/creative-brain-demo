@@ -326,6 +326,13 @@ st.markdown(
         background-color: transparent !important;
     }
 
+    /* Expander lightening */
+    [data-testid="stExpander"] {
+        background-color: #F5F5F5 !important;
+        border: 1px solid #E8E8E8 !important;
+        border-radius: 8px !important;
+    }
+
     .divider {
         border: none;
         border-top: 1px solid #e0e0e0;
