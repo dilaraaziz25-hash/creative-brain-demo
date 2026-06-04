@@ -835,6 +835,8 @@ with col_avatar:
             pattern_text = intervention['pattern'].replace('_', ' ').capitalize()
             st.markdown(f"<div style='color: #999; font-size: 11px; letter-spacing: 0.05rem; font-weight: 600;'>{pattern_text}</div>", unsafe_allow_html=True)
 
+            st.markdown("---")
+
         with col2:
             # Question as expandable label with context inside
             with st.expander(intervention['question'], expanded=False):
@@ -888,7 +890,7 @@ with col_right:
             transcript_items += f"""
             <div style="margin-bottom:12px; padding-left:10px;
                  border-left:3px solid {border_color};">
-                <div style="font-weight:600; font-size:13px;
+                <div style="font-weight:500; font-size:13px;
                      color:#1a1a1a; font-family: 'Source Sans Pro', sans-serif;">{event['speaker']}</div>
                 <div style="font-size:12px; color:#555;
                      margin-top:4px; font-family: 'Source Sans Pro', sans-serif;">{event['text']}</div>
