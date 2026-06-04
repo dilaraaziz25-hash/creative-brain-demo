@@ -907,6 +907,11 @@ with col_avatar:
         """, height=140)
 
     # AVATAR GRID - Below intervention card
+    st.markdown("""
+    <hr style="border: none;
+               border-top: 2px solid #E0E0E0;
+               margin: 8px 0 12px 0;">
+    """, unsafe_allow_html=True)
     st.markdown('<div class="section-header">👥 In this meeting</div>', unsafe_allow_html=True)
 
     participants = parse_participants(str(current_transcript_path))
