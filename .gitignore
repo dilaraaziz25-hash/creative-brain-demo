@@ -5,3 +5,6 @@ events_cache.json
 .env
 .venv/
 venv/
+
+*.zip
+Screen Recording*.zip
