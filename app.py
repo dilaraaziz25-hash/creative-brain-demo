@@ -48,6 +48,10 @@ st.markdown(
         box-shadow: none !important;
     }
 
+    [data-testid="stHorizontalBlock"] {
+        background: transparent !important;
+    }
+
     div[data-testid="stVerticalBlockBorderWrapper"]:last-of-type {
         border-left: 2px solid #D0D0D0 !important;
         padding-left: 8px;
@@ -58,6 +62,10 @@ st.markdown(
         background-color: #FFFFFF !important;
         border: 1px solid #D0D0D0 !important;
         border-radius: 8px !important;
+    }
+
+    [data-testid="stSelectbox"] {
+        margin-top: -0.5rem !important;
     }
 
     /* Right column styling */
@@ -286,7 +294,6 @@ st.markdown(
     /* Persona question expander - not in intervention history */
     [data-testid="stVerticalBlock"] > [data-testid="stExpander"] [role="button"] {
         font-size: 18px !important;
-        font-family: 'Source Sans Pro', sans-serif !important;
         background-color: #F5F5F5 !important;
         border-radius: 6px !important;
         padding: 12px !important;
@@ -549,6 +556,7 @@ def render_avatar_grid(participants: list[dict], current_speaker: str, tile_colo
         justify-content: center;
         font-weight: 700;
         font-size: 28px;
+        font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif;
         color: #2D2D2D;
         margin-bottom: 8px;
         transition: all 0.3s ease;
@@ -570,6 +578,7 @@ def render_avatar_grid(participants: list[dict], current_speaker: str, tile_colo
     .pastel-avatar-name {
         font-weight: 700;
         font-size: 13px;
+        font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif;
         color: #333;
         margin: 4px 0 2px 0;
         line-height: 1.2;
@@ -578,6 +587,7 @@ def render_avatar_grid(participants: list[dict], current_speaker: str, tile_colo
 
     .pastel-avatar-title {
         font-size: 10px;
+        font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, sans-serif;
         font-style: italic;
         color: #666;
         line-height: 1.2;
@@ -792,7 +802,8 @@ with col_avatar:
             st.markdown(f"<div style='color: {intervention['colour']}; font-weight: 600; font-size: 16px;'>{intervention['persona']}</div>", unsafe_allow_html=True)
 
             # Pattern label muted
-            st.markdown(f"<div style='color: #999; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05rem; font-weight: 600;'>{intervention['pattern'].replace('_', ' ')}</div>", unsafe_allow_html=True)
+            pattern_text = intervention['pattern'].replace('_', ' ').capitalize()
+            st.markdown(f"<div style='color: #999; font-size: 11px; letter-spacing: 0.05rem; font-weight: 600;'>{pattern_text}</div>", unsafe_allow_html=True)
 
         with col2:
             # Question as expandable label with context inside
@@ -838,7 +849,7 @@ with col_right:
     st.markdown('<div class="section-header">📝 Transcript</div>', unsafe_allow_html=True)
 
     if st.session_state.playing or st.session_state.display_turn > 0:
-        start = max(0, st.session_state.display_turn - 4)
+        start = 0
         transcript_items = ""
         for idx in range(start, min(st.session_state.display_turn, len(events))):
             event = events[idx]
@@ -847,9 +858,9 @@ with col_right:
             transcript_items += f"""
             <div style="margin-bottom:12px; padding-left:10px;
                  border-left:3px solid {border_color};">
-                <div style="font-weight:bold; font-size:16px;
+                <div style="font-weight:600; font-size:13px;
                      color:#1a1a1a; font-family: 'Source Sans Pro', sans-serif;">{event['speaker']}</div>
-                <div style="font-size:14px; color:#444;
+                <div style="font-size:12px; color:#555;
                      margin-top:4px; font-family: 'Source Sans Pro', sans-serif;">{event['text']}</div>
             </div>
             """
