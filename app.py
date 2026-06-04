@@ -291,16 +291,39 @@ st.markdown(
         background-color: transparent;
     }
 
-    /* Persona question expander - not in intervention history */
+    /* Persona question expander - inside outer intervention frame */
     [data-testid="stVerticalBlock"] > [data-testid="stExpander"] [role="button"] {
-        font-size: 18px !important;
-        background-color: #F5F5F5 !important;
-        border-radius: 6px !important;
+        font-size: 22px !important;
+        background-color: transparent !important;
         padding: 12px !important;
+        line-height: 1.45 !important;
+    }
+
+    [data-testid="stVerticalBlock"] > [data-testid="stExpander"] {
+        background-color: transparent !important;
+    }
+
+    [data-testid="stVerticalBlock"] > [data-testid="stExpander"] details {
+        background-color: #FFFFFF !important;
+        border-radius: 8px !important;
     }
 
     [data-testid="stVerticalBlock"] > [data-testid="stExpander"] [role="button"]:hover {
-        background-color: #EFEFEF !important;
+        background-color: #F5F5F5 !important;
+    }
+
+    /* Intervention card frame - targets the container with col1 and col2 */
+    [data-testid="stColumn"]:has([data-testid="stExpander"]) {
+        background-color: #FFFFFF !important;
+        border: 1px solid #D8D8D8 !important;
+        border-radius: 12px !important;
+        padding: 18px !important;
+        margin-top: 8px !important;
+    }
+
+    /* Persona identity - inside outer intervention frame */
+    [data-testid="stColumn"]:has([data-testid="stHtml"]) {
+        background-color: transparent !important;
     }
 
     .divider {
@@ -772,7 +795,7 @@ with col_avatar:
             })
 
         # Two-column layout: brain icon + persona name on LEFT, expander on RIGHT
-        col1, col2 = st.columns([1, 3])
+        col1, col2 = st.columns([0.75, 3.25], gap="small")
 
         with col1:
             # Brain icon with sparkle animation
