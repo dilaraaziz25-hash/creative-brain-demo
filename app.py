@@ -294,6 +294,7 @@ st.markdown(
     /* Persona question expander - inside outer intervention frame */
     [data-testid="stVerticalBlock"] > [data-testid="stExpander"] [role="button"] {
         font-size: 22px !important;
+        font-weight: 500;
         background-color: transparent !important;
         padding: 12px !important;
         line-height: 1.45 !important;
@@ -436,10 +437,8 @@ if "last_chime_turn" not in st.session_state:
     st.session_state.last_chime_turn = -1
 if "intervention_history" not in st.session_state:
     st.session_state.intervention_history = []
-if "reaction" not in st.session_state:
-    st.session_state.reaction = None
-if "reaction_turn" not in st.session_state:
-    st.session_state.reaction_turn = None
+if "reactions" not in st.session_state:
+    st.session_state.reactions = {}
 
 @st.cache_data
 def load_events(_transcript_path: str, _transcript_hash: str, _cache_key: str):
@@ -782,8 +781,8 @@ with col_next:
                     question = prev_event["intervention"]["question"]
                     recent_turns = events[max(0, prev_turn_idx - 2):prev_turn_idx + 1]
                     reaction = generate_reaction(speaker_with_intervention, persona_name, question, recent_turns)
-                    st.session_state.reaction = reaction
-                    st.session_state.reaction_turn = st.session_state.display_turn
+                    if reaction:
+                        st.session_state.reactions[st.session_state.display_turn] = reaction
 
             st.session_state.display_turn += 1
             st.session_state.current_turn = min(st.session_state.display_turn - 1, len(events) - 1)
@@ -794,6 +793,7 @@ with col_reset:
         st.session_state.current_turn = -1
         st.session_state.playing = False
         st.session_state.intervention_history = []
+        st.session_state.reactions = {}
 
 st.markdown("---")
 
@@ -908,10 +908,9 @@ with col_right:
 
             # Check if this turn has a reaction to display
             reaction_html = ""
-            if st.session_state.reaction and st.session_state.reaction_turn == idx + 1:
-                reaction_html = f"""<div style="font-style:italic; font-size:12px; color:#666; margin-top:6px; font-family: 'Source Sans Pro', sans-serif;">*{event['speaker']}: {st.session_state.reaction}*</div>"""
-                st.session_state.reaction = None
-                st.session_state.reaction_turn = None
+            if idx + 1 in st.session_state.reactions:
+                reaction = st.session_state.reactions[idx + 1]
+                reaction_html = f"""<div style="font-style:italic; font-size:12px; color:#666; margin-top:6px; font-family: 'Source Sans Pro', sans-serif;">*{event['speaker']}: {reaction}*</div>"""
 
             transcript_items += f"""
             <div style="margin-bottom:12px; padding-left:10px;
