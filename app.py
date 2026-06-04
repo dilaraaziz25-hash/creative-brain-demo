@@ -83,6 +83,21 @@ st.markdown(
         padding-bottom: 0 !important;
     }
 
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        padding: 8px !important;
+    }
+
+    [data-testid="stExpander"] summary {
+        padding: 8px !important;
+        min-height: 0 !important;
+    }
+
+    /* Reduce padding in persona card right column */
+    [data-testid="stColumn"] > div > div > div {
+        padding-bottom: 0rem !important;
+        gap: 0rem !important;
+    }
+
     /* Right column styling */
     [data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:last-child > div {
         background-color: #E2E2E0;
@@ -335,6 +350,7 @@ st.markdown(
         border-radius: 12px !important;
         padding: 18px !important;
         margin-top: 8px !important;
+        align-self: flex-start !important;
     }
 
     /* Persona identity - inside outer intervention frame */
@@ -829,7 +845,7 @@ with col_avatar:
             })
 
         # Two-column layout: brain icon + persona name on LEFT, expander on RIGHT
-        col1, col2 = st.columns([0.75, 3.25], gap="small")
+        col1, col2 = st.columns([1, 3], gap="small")
 
         with col1:
             # Brain icon with sparkle animation
@@ -861,8 +877,6 @@ with col_avatar:
             # Pattern label muted
             pattern_text = intervention['pattern'].replace('_', ' ').capitalize()
             st.markdown(f"<div style='color: #999; font-size: 11px; letter-spacing: 0.05rem; font-weight: 600;'>{pattern_text}</div>", unsafe_allow_html=True)
-
-            st.markdown("---")
 
         with col2:
             # Question as expandable label with context inside
