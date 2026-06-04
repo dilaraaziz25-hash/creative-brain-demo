@@ -65,7 +65,22 @@ st.markdown(
     }
 
     [data-testid="stSelectbox"] {
-        margin-top: -0.5rem !important;
+        margin-top: -12px !important;
+    }
+
+    /* Reduce expander padding */
+    [data-testid="stExpander"] {
+        padding: 4px 8px !important;
+        margin: 0 !important;
+    }
+
+    [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
+        padding-bottom: 0 !important;
+        gap: 0 !important;
+    }
+
+    [data-testid="stExpander"] > details {
+        padding-bottom: 0 !important;
     }
 
     /* Right column styling */
@@ -676,15 +691,13 @@ def render_avatar_grid(participants: list[dict], current_speaker: str, tile_colo
 
 st.markdown("<h2>🧠 The Creative Brain</h2>", unsafe_allow_html=True)
 
-st.markdown("<b>Select Transcript</b>", unsafe_allow_html=True)
-st.markdown('<div style="max-width:300px">', unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 8px;'><b>Select Transcript</b></div>", unsafe_allow_html=True)
 new_transcript = st.selectbox(
     "",
     options=list(TRANSCRIPT_MAPPING.keys()),
     key="transcript_selector",
     index=list(TRANSCRIPT_MAPPING.keys()).index(st.session_state.selected_transcript) if "selected_transcript" in st.session_state else 0
 )
-st.markdown('</div>', unsafe_allow_html=True)
 
 # Update selected transcript immediately if it changed
 if "last_transcript" not in st.session_state:
@@ -736,9 +749,7 @@ if st.session_state.get("playing"):
                 st.session_state.playing = False
             st.rerun()
 
-st.markdown("---")
-
-col_play, col_next, col_reset, col_spacer = st.columns([1, 1, 1, 6])
+col1, col2, col3, col4 = st.columns([1, 1, 1, 6])
 
 has_intervention = (st.session_state.current_turn >= 0 and
                    st.session_state.current_turn < len(events) and
@@ -751,7 +762,7 @@ elif has_intervention and st.session_state.display_turn > 0:
 else:
     play_label = "▶ Play"
 
-with col_play:
+with col1:
     if st.button(play_label, key="play_btn"):
         if st.session_state.playing:
             st.session_state.playing = False
@@ -767,7 +778,7 @@ with col_play:
                 st.session_state.playing = True
                 st.rerun()
 
-with col_next:
+with col2:
     if st.button("Next turn →", key="next_btn"):
         if st.session_state.display_turn < len(events):
             # Check if previous turn had an intervention
@@ -787,15 +798,13 @@ with col_next:
             st.session_state.display_turn += 1
             st.session_state.current_turn = min(st.session_state.display_turn - 1, len(events) - 1)
 
-with col_reset:
+with col3:
     if st.button("↺ Reset", key="reset_btn"):
         st.session_state.display_turn = 0
         st.session_state.current_turn = -1
         st.session_state.playing = False
         st.session_state.intervention_history = []
         st.session_state.reactions = {}
-
-st.markdown("---")
 
 col_avatar, col_right = st.columns([0.65, 0.35])
 
