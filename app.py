@@ -4,7 +4,7 @@ import re
 import os
 import base64
 from pathlib import Path
-from engine import run_demo, get_transcript_hash, load_cache
+from engine import run_demo, get_transcript_hash, load_cache, generate_reaction
 from personas import PERSONAS
 
 st.set_page_config(layout="wide", page_title="The Creative Brain")
@@ -436,6 +436,10 @@ if "last_chime_turn" not in st.session_state:
     st.session_state.last_chime_turn = -1
 if "intervention_history" not in st.session_state:
     st.session_state.intervention_history = []
+if "reaction" not in st.session_state:
+    st.session_state.reaction = None
+if "reaction_turn" not in st.session_state:
+    st.session_state.reaction_turn = None
 
 @st.cache_data
 def load_events(_transcript_path: str, _transcript_hash: str, _cache_key: str):
@@ -767,6 +771,20 @@ with col_play:
 with col_next:
     if st.button("Next turn →", key="next_btn"):
         if st.session_state.display_turn < len(events):
+            # Check if previous turn had an intervention
+            prev_turn_idx = st.session_state.display_turn - 1
+            if prev_turn_idx >= 0 and prev_turn_idx < len(events):
+                prev_event = events[prev_turn_idx]
+                if prev_event.get("intervention"):
+                    # Generate reaction from the speaker whose turn had the intervention
+                    speaker_with_intervention = prev_event["speaker"]
+                    persona_name = prev_event["intervention"]["persona"]
+                    question = prev_event["intervention"]["question"]
+                    recent_turns = events[max(0, prev_turn_idx - 2):prev_turn_idx + 1]
+                    reaction = generate_reaction(speaker_with_intervention, persona_name, question, recent_turns)
+                    st.session_state.reaction = reaction
+                    st.session_state.reaction_turn = st.session_state.display_turn
+
             st.session_state.display_turn += 1
             st.session_state.current_turn = min(st.session_state.display_turn - 1, len(events) - 1)
 
@@ -887,6 +905,14 @@ with col_right:
             event = events[idx]
             intervention = event["intervention"]
             border_color = intervention["colour"] if intervention else "transparent"
+
+            # Check if this turn has a reaction to display
+            reaction_html = ""
+            if st.session_state.reaction and st.session_state.reaction_turn == idx + 1:
+                reaction_html = f"""<div style="font-style:italic; font-size:12px; color:#666; margin-top:6px; font-family: 'Source Sans Pro', sans-serif;">*{event['speaker']}: {st.session_state.reaction}*</div>"""
+                st.session_state.reaction = None
+                st.session_state.reaction_turn = None
+
             transcript_items += f"""
             <div style="margin-bottom:12px; padding-left:10px;
                  border-left:3px solid {border_color};">
@@ -894,6 +920,7 @@ with col_right:
                      color:#1a1a1a; font-family: 'Source Sans Pro', sans-serif;">{event['speaker']}</div>
                 <div style="font-size:12px; color:#555;
                      margin-top:4px; font-family: 'Source Sans Pro', sans-serif;">{event['text']}</div>
+                {reaction_html}
             </div>
             """
 

@@ -220,3 +220,31 @@ def run_demo(transcript_path: str, cache_key: str = "", _file_hash: str = "") ->
         save_cache(events, _file_hash, cache_path)
 
     return events
+
+
+def generate_reaction(speaker, persona_name, question, recent_turns):
+    """Generate a natural spoken reaction from a speaker to an intervention."""
+    recent_text = "\n".join([f"{t['speaker']}: {t['text']}" for t in recent_turns[-3:]])
+
+    prompt = f"""You are {speaker} in a business meeting.
+The AI facilitator just prompted the room with:
+"{question}"
+
+Recent conversation:
+{recent_text}
+
+Write ONE short natural spoken reaction from {speaker}.
+Maximum 1 sentence. Sounds like a real person thinking
+out loud — not formal, not directly quoting the question.
+Return ONLY the sentence, nothing else."""
+
+    try:
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=60,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.content[0].text.strip()
+    except Exception as e:
+        print(f"Error generating reaction: {e}")
+        return None
